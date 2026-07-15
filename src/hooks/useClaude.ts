@@ -4,7 +4,7 @@ import type { Slide } from "../types/slide";
 const PROMPT = `Return ONE pitch deck slide as JSON only, no markdown:
 {"title":"...","bullets":["...","...","..."],"type":"problem|solution|market|traction|team|ask"}`;
 
-// Pulls a slide JSON object out of Claude's streamed text response
+// Pulls a slide JSON object out of the response text
 function parseSlide(text: string): Slide | null {
   const match = text.match(/\{[\s\S]*\}/);
   if (!match) return null;
@@ -15,40 +15,27 @@ function parseSlide(text: string): Slide | null {
   }
 }
 
-// Calls the Claude API with streaming and returns one parsed slide
+// Calls Groq API (free, no credit card) and returns one parsed slide
 async function fetchSlide(chunk: string): Promise<Slide | null> {
-  const res = await fetch("/api/claude", {
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`,
+    },
     body: JSON.stringify({
-      model: "claude-sonnet-4-6",
+      model: "llama-3.1-8b-instant",
       max_tokens: 512,
-      stream: true,
       messages: [{ role: "user", content: `${PROMPT}\n\nTranscript:\n${chunk}` }],
     }),
   });
-  if (!res.ok || !res.body) return null;
-
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let full = "";
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    for (const line of decoder.decode(value).split("\n")) {
-      if (!line.startsWith("data: ")) continue;
-      try {
-        const data = JSON.parse(line.slice(6));
-        if (data.type === "content_block_delta") full += data.delta?.text ?? "";
-      } catch {
-        /* skip malformed SSE chunks */
-      }
-    }
-  }
-  return parseSlide(full);
+  if (!res.ok) return null;
+  const data = await res.json();
+  const text = data.choices?.[0]?.message?.content ?? "";
+  return parseSlide(text);
 }
 
-// Manages slide generation — queues transcript chunks and sends them to Claude
+// Manages slide generation queue
 export function useClaude() {
   const [slides, setSlides] = useState<Slide[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -56,7 +43,7 @@ export function useClaude() {
   const queue = useRef<string[]>([]);
   const processing = useRef(false);
 
-  // Processes the next queued transcript chunk through Claude
+  // Processes the next queued transcript chunk
   const processQueue = useCallback(async () => {
     if (processing.current || !queue.current.length) return;
     processing.current = true;
@@ -69,7 +56,7 @@ export function useClaude() {
     if (queue.current.length) processQueue();
   }, []);
 
-  // Adds a transcript chunk to the generation queue
+  // Adds a transcript chunk to the queue
   const enqueue = useCallback(
     (text: string) => {
       queue.current.push(text);
@@ -78,7 +65,7 @@ export function useClaude() {
     [processQueue]
   );
 
-  // Watches the live transcript and sends every 2–3 sentences to Claude
+  // Sends every 2-3 sentences to Groq
   const feedTranscript = useCallback(
     (full: string) => {
       const unsent = full.slice(sentIndex.current);
@@ -92,7 +79,7 @@ export function useClaude() {
     [enqueue]
   );
 
-  // Sends any remaining unsent transcript when recording stops
+  // Sends remaining transcript when recording stops
   const flush = useCallback(
     (full: string) => {
       const rest = full.slice(sentIndex.current).trim();
@@ -101,7 +88,7 @@ export function useClaude() {
     [enqueue]
   );
 
-  // Clears all slides and resets the sent-transcript tracker
+  // Resets everything
   const reset = useCallback(() => {
     setSlides([]);
     sentIndex.current = 0;
