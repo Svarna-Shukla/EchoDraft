@@ -1,5 +1,5 @@
+import { Check, Copy } from "lucide-react";
 import { useState } from "react";
-import { Copy, Check } from "lucide-react";
 
 type Props = { getText: () => string };
 

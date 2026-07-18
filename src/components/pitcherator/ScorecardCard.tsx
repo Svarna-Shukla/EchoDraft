@@ -1,8 +1,10 @@
 import { motion } from "framer-motion";
+import { Wand2 } from "lucide-react";
 import type { Scorecard } from "../../types/pitcherator";
+import { overallScore, letterGrade } from "../../lib/scoring";
 import CopyButton from "../CopyButton";
 
-type Props = { scorecard: Scorecard };
+type Props = { scorecard: Scorecard; onGenerateImprovedDeck: () => void };
 
 const LABELS: { key: keyof Scorecard["ratings"]; label: string }[] = [
   { key: "clarity", label: "Clarity" },
@@ -13,9 +15,12 @@ const LABELS: { key: keyof Scorecard["ratings"]; label: string }[] = [
   { key: "ask", label: "Ask" },
 ];
 
-// Renders the 6 rating bars and improvement suggestions from a completed Pitcherator scorecard
-export default function ScorecardCard({ scorecard }: Props) {
+// Renders the 6 rating bars, overall grade, and improvement suggestions from a completed Pitcherator scorecard
+export default function ScorecardCard({ scorecard, onGenerateImprovedDeck }: Props) {
+  const total = overallScore(scorecard.ratings);
+  const grade = letterGrade(total);
   const copyText = () =>
+    `Overall: ${total}/60 (${grade})\n` +
     LABELS.map((l) => `${l.label}: ${scorecard.ratings[l.key]}/10`).join("\n") +
     "\n\nImprove:\n" +
     scorecard.suggestions.map((s) => `- ${s}`).join("\n");
@@ -23,7 +28,13 @@ export default function ScorecardCard({ scorecard }: Props) {
   return (
     <div className="w-full max-w-md rounded-2xl border border-purple-500/30 bg-[#0f0f1a] p-6 shadow-2xl shadow-purple-500/20">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold text-white">Your Scorecard</h3>
+        <div>
+          <h3 className="text-lg font-bold text-white">Your Scorecard</h3>
+          <p className="text-sm text-white/50">
+            Overall <span className="font-bold text-purple-300">{total}/60</span>{" "}
+            <span className="font-bold text-purple-300">({grade})</span>
+          </p>
+        </div>
         <CopyButton getText={copyText} />
       </div>
       <div className="mt-4 flex flex-col gap-3">
@@ -47,9 +58,17 @@ export default function ScorecardCard({ scorecard }: Props) {
       <h4 className="mt-5 text-xs font-bold uppercase tracking-widest text-white/50">Improve</h4>
       <ul className="mt-2 space-y-1.5">
         {scorecard.suggestions.map((s, i) => (
-          <li key={i} className="text-sm text-white/80">- {s}</li>
+          <li key={i} className="text-sm text-white/80">
+            - {s}
+          </li>
         ))}
       </ul>
+      <button
+        onClick={onGenerateImprovedDeck}
+        className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-110"
+      >
+        <Wand2 className="h-4 w-4" /> Generate Improved Deck
+      </button>
     </div>
   );
 }

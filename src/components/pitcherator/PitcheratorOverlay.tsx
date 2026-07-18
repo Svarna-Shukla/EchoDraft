@@ -1,19 +1,20 @@
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import type { usePitcherator } from "../../hooks/usePitcherator";
+import { useSpeech } from "../../hooks/useSpeech";
 import QuestionView from "./QuestionView";
 import ScorecardCard from "./ScorecardCard";
 
-type Speech = { transcript: string; isListening: boolean; start: () => void; stop: () => void };
-
 type Props = {
   pitcherator: ReturnType<typeof usePitcherator>;
-  speech: Speech;
   onClose: () => void;
+  onGenerateImprovedDeck: () => void;
 };
 
-// Full-screen modal that walks the user through Pitcherator's questions and final scorecard
-export default function PitcheratorOverlay({ pitcherator, speech, onClose }: Props) {
+// Full-screen modal that walks the user through Pitcherator's questions and final scorecard.
+// Uses its own isolated speech instance so answering questions never overwrites the main pitch transcript.
+export default function PitcheratorOverlay({ pitcherator, onClose, onGenerateImprovedDeck }: Props) {
+  const speech = useSpeech();
   const { stage, questions, currentQuestionIndex, scorecard, failed } = pitcherator;
 
   // Toggles recording for the current question, submitting the answer once the user stops
@@ -46,14 +47,15 @@ export default function PitcheratorOverlay({ pitcherator, speech, onClose }: Pro
           isRecording={speech.isListening}
           liveAnswer={speech.transcript}
           onToggleRecord={handleToggleRecord}
+          onSubmitText={pitcherator.submitAnswer}
         />
       )}
 
-      {!failed && stage === "generating-scorecard" && (
-        <p className="text-sm text-white/60">Scoring your pitch…</p>
-      )}
+      {!failed && stage === "generating-scorecard" && <p className="text-sm text-white/60">Scoring your pitch…</p>}
 
-      {!failed && stage === "scorecard" && scorecard && <ScorecardCard scorecard={scorecard} />}
+      {!failed && stage === "scorecard" && scorecard && (
+        <ScorecardCard scorecard={scorecard} onGenerateImprovedDeck={onGenerateImprovedDeck} />
+      )}
     </motion.div>
   );
 }

@@ -3,7 +3,7 @@ import type { SessionRecord } from "../types/session";
 import type { Slide } from "../types/slide";
 import type { FounderKit } from "../types/founderKit";
 
-const STORAGE_KEY = "echodraft:sessions";
+const STORAGE_KEY = "pitchr:sessions";
 const MAX_SESSIONS = 3;
 
 // Reads the saved session list from localStorage, tolerating a missing or corrupt value

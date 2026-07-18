@@ -22,21 +22,37 @@ function normalize(raw: Partial<Competitor>): Competitor | null {
   };
 }
 
+// Pulls a usable competitor array out of whatever shape Groq returned — a bare array, or an object wrapping one
+function extractArray(raw: unknown): Partial<Competitor>[] {
+  if (Array.isArray(raw)) return raw;
+  if (raw && typeof raw === "object") {
+    const values = Object.values(raw as Record<string, unknown>);
+    const arr = values.find((v) => Array.isArray(v));
+    if (Array.isArray(arr)) return arr as Partial<Competitor>[];
+  }
+  return [];
+}
+
 // Generates a list of plausible competitors from the LLM's own knowledge, based on the pitch transcript
 export function useCompetitorRadar() {
   const [competitors, setCompetitors] = useState<Competitor[] | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [failed, setFailed] = useState(false);
 
-  // Fires the Groq call and stores the parsed, normalized competitor list
+  // Fires the Groq call and stores the parsed, normalized competitor list — never throws, always resolves isGenerating
   const generate = useCallback(async (transcript: string) => {
     setIsGenerating(true);
     setFailed(false);
-    const raw = await fetchGroqJSON<Partial<Competitor>[]>(PROMPT, transcript, 1000);
-    const list = raw?.map(normalize).filter((c): c is Competitor => c !== null).slice(0, MAX_COMPETITORS);
-    if (list && list.length) setCompetitors(list);
-    else setFailed(true);
-    setIsGenerating(false);
+    try {
+      const raw = await fetchGroqJSON<unknown>(PROMPT, transcript, 1000);
+      const list = extractArray(raw).map(normalize).filter((c): c is Competitor => c !== null).slice(0, MAX_COMPETITORS);
+      if (list.length) setCompetitors(list);
+      else setFailed(true);
+    } catch {
+      setFailed(true);
+    } finally {
+      setIsGenerating(false);
+    }
   }, []);
 
   // Clears the results so a fresh session can regenerate

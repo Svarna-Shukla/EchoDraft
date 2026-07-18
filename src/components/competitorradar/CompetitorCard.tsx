@@ -1,6 +1,7 @@
 import type { Competitor } from "../../types/competitor";
+import type { Theme } from "../../hooks/useTheme";
 
-type Props = { competitor: Competitor };
+type Props = { competitor: Competitor; theme: Theme };
 
 const THREAT_CONFIG: Record<Competitor["threat"], { border: string; badge: string }> = {
   low: { border: "border-green-500", badge: "bg-green-500/20 text-green-400" },
@@ -9,20 +10,23 @@ const THREAT_CONFIG: Record<Competitor["threat"], { border: string; badge: strin
 };
 
 // Renders one competitor with a colour-coded threat badge; falls back to "medium" styling for any unexpected value
-export default function CompetitorCard({ competitor }: Props) {
+export default function CompetitorCard({ competitor, theme }: Props) {
   const cfg = THREAT_CONFIG[competitor.threat] ?? THREAT_CONFIG.medium;
+  const isDark = theme === "dark";
 
   return (
-    <div className={`rounded-2xl border-l-4 ${cfg.border} bg-[#0f0f1a] p-5 shadow-xl`}>
+    <div
+      className={`rounded-2xl border-l-4 p-5 shadow-xl ${cfg.border} ${isDark ? "bg-[#0f0f1a]" : "bg-white ring-1 ring-black/5"}`}
+    >
       <div className="flex items-center justify-between gap-3">
-        <h4 className="text-lg font-bold text-white">{competitor.name}</h4>
+        <h4 className={`text-lg font-bold ${isDark ? "text-white" : "text-black"}`}>{competitor.name}</h4>
         <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold uppercase ${cfg.badge}`}>
           {competitor.threat} threat
         </span>
       </div>
-      <p className="mt-2 line-clamp-1 text-sm text-white/70">{competitor.whatTheyDo}</p>
-      <p className="mt-2 line-clamp-1 text-sm text-white/50">
-        <span className="font-semibold text-white/70">Weakness: </span>
+      <p className={`mt-2 text-sm ${isDark ? "text-white/70" : "text-black/60"}`}>{competitor.whatTheyDo}</p>
+      <p className={`mt-2 text-sm ${isDark ? "text-white/50" : "text-black/45"}`}>
+        <span className={`font-semibold ${isDark ? "text-white/70" : "text-black/60"}`}>Weakness: </span>
         {competitor.weakness}
       </p>
     </div>

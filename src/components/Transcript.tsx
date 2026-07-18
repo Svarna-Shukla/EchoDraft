@@ -1,15 +1,19 @@
 import { motion } from "framer-motion";
+import type { Theme } from "../hooks/useTheme";
 
-type Props = { text: string; isListening: boolean };
+type Props = { text: string; isListening: boolean; theme?: Theme };
 
 // Displays the live speech transcript, word by word, inside a bordered scrollable box
-export default function Transcript({ text, isListening }: Props) {
+export default function Transcript({ text, isListening, theme = "dark" }: Props) {
   const words = text ? text.split(/\s+/) : [];
   if (!words.length && !isListening) return null;
+  const isDark = theme === "dark";
 
   return (
     <motion.div
-      className="mt-6 max-h-40 w-full max-w-md overflow-y-auto rounded-xl border border-white/10 p-4 text-center text-sm leading-relaxed text-white/70"
+      className={`mt-6 max-h-40 w-full max-w-md overflow-y-auto rounded-xl border p-4 text-center text-sm leading-relaxed ${
+        isDark ? "border-white/10 text-white/70" : "border-black/10 text-black/70"
+      }`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >

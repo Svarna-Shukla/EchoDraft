@@ -1,78 +1,92 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import type { Slide } from "../types/slide";
 import { fetchGroqJSON } from "../lib/groq";
+import { SLIDE_TYPES } from "../lib/slideTheme";
 
-const PROMPT = `Return ONE pitch deck slide as JSON only, no markdown:
-{"title":"...","bullets":["...","...","..."],"type":"problem|solution|market|traction|team|ask"}
+const DECK_PROMPT = `You are an expert pitch deck consultant. Read the founder's pitch transcript below and produce a complete investor pitch deck as JSON only, no markdown, no commentary — a single JSON array of exactly 8 slide objects, one per type, in this exact order:
+[
+  {"title":"...","bullets":["...","...","..."],"type":"problem"},
+  {"title":"...","bullets":["...","...","..."],"type":"solution"},
+  {"title":"...","bullets":["...","...","..."],"type":"market"},
+  {"title":"...","bullets":["...","...","..."],"type":"businessModel"},
+  {"title":"...","bullets":["...","...","..."],"type":"traction"},
+  {"title":"...","bullets":["...","...","..."],"type":"competitive"},
+  {"title":"...","bullets":["...","...","..."],"type":"team"},
+  {"title":"...","bullets":["...","...","..."],"type":"ask"}
+]
+Each slide needs a short punchy title (max 8 words) and exactly 3 short bullets (max 12 words each). If the transcript doesn't cover a topic, make a smart, realistic inference from context rather than leaving it generic or empty. Never omit a slide.
 
 Transcript:`;
 
-// Manages slide generation queue
+const IMPROVE_PROMPT = `You previously helped build a pitch deck from a transcript. The founder was then grilled with brutal investor questions and given specific improvement suggestions. Using the original transcript plus the Q&A and suggestions below, produce an IMPROVED complete pitch deck as JSON only, no markdown — a single JSON array of exactly 8 slide objects, one per type in this exact order: problem, solution, market, businessModel, traction, competitive, team, ask. Each slide: {"title":"...","bullets":["...","...","..."],"type":"..."}. Directly address the weaknesses the questions and suggestions exposed.
+
+Original transcript, investor Q&A, and suggestions:
+`;
+
+// Forces one raw Groq slide into a safe shape, assigning a fallback type by position if the model omits it
+function normalizeSlide(raw: Partial<Slide> | null | undefined, index: number): Slide | null {
+  if (!raw || typeof raw.title !== "string" || !Array.isArray(raw.bullets)) return null;
+  const bullets = raw.bullets.filter((b): b is string => typeof b === "string").slice(0, 3);
+  if (!bullets.length) return null;
+  const type = typeof raw.type === "string" && raw.type ? raw.type : SLIDE_TYPES[index] ?? "solution";
+  return { title: raw.title, bullets, type };
+}
+
+// Validates a raw Groq response is a non-empty array of usable slides
+function normalizeDeck(raw: Partial<Slide>[] | null): Slide[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((s, i) => normalizeSlide(s, i)).filter((s): s is Slide => s !== null);
+}
+
+// Generates and holds the full pitch deck from a single one-shot Groq call
 export function useClaude() {
   const [slides, setSlides] = useState<Slide[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
-  const sentIndex = useRef(0);
-  const queue = useRef<string[]>([]);
-  const processing = useRef(false);
+  const [failed, setFailed] = useState(false);
+  const [lastInput, setLastInput] = useState("");
 
-  // Processes the next queued transcript chunk
-  const processQueue = useCallback(async () => {
-    if (processing.current || !queue.current.length) return;
-    processing.current = true;
+  // Sends the entire transcript (or typed idea) once and parses the full 8-slide deck back
+  const generate = useCallback(async (fullText: string) => {
+    if (!fullText.trim()) return;
+    setLastInput(fullText);
     setIsGenerating(true);
-    const chunk = queue.current.shift()!;
-    const slide = await fetchGroqJSON<Slide>(PROMPT, chunk);
-    if (slide) setSlides((s) => [...s, slide]);
-    processing.current = false;
-    setIsGenerating(queue.current.length > 0);
-    if (queue.current.length) processQueue();
+    setFailed(false);
+    const raw = await fetchGroqJSON<Partial<Slide>[]>(DECK_PROMPT, fullText, 2400);
+    const list = normalizeDeck(raw);
+    if (list.length) setSlides(list);
+    else setFailed(true);
+    setIsGenerating(false);
   }, []);
 
-  // Adds a transcript chunk to the queue
-  const enqueue = useCallback(
-    (text: string) => {
-      queue.current.push(text);
-      processQueue();
+  // Rebuilds the deck using the original transcript plus Pitcherator's investor Q&A and suggestions
+  const regenerateWithFeedback = useCallback(
+    async (transcript: string, qa: { question: string; answer: string }[], suggestions: string[]) => {
+      setLastInput(transcript);
+      setIsGenerating(true);
+      setFailed(false);
+      const qaText = qa.map((p) => `Q: ${p.question}\nA: ${p.answer}`).join("\n\n");
+      const suggestionText = suggestions.map((s) => `- ${s}`).join("\n");
+      const content = `${transcript}\n\nInvestor Q&A:\n${qaText}\n\nSuggestions to address:\n${suggestionText}`;
+      const raw = await fetchGroqJSON<Partial<Slide>[]>(IMPROVE_PROMPT, content, 2400);
+      const list = normalizeDeck(raw);
+      if (list.length) setSlides(list);
+      else setFailed(true);
+      setIsGenerating(false);
     },
-    [processQueue]
-  );
-
-  // Sends every 2-3 sentences to Groq
-  const feedTranscript = useCallback(
-    (full: string) => {
-      const unsent = full.slice(sentIndex.current);
-      const matches = [...unsent.matchAll(/[^.!?]+[.!?]+/g)];
-      if (matches.length < 2) return;
-      const count = Math.min(3, matches.length);
-      const chunk = matches.slice(0, count).map((m) => m[0]).join(" ");
-      sentIndex.current += chunk.length;
-      enqueue(chunk);
-    },
-    [enqueue]
-  );
-
-  // Sends remaining transcript when recording stops
-  const flush = useCallback(
-    (full: string) => {
-      const rest = full.slice(sentIndex.current).trim();
-      if (rest) enqueue(rest);
-    },
-    [enqueue]
+    []
   );
 
   // Resets everything
   const reset = useCallback(() => {
     setSlides([]);
-    sentIndex.current = 0;
-    queue.current = [];
+    setFailed(false);
+    setLastInput("");
   }, []);
 
   // Replaces the current deck with a previously saved one (used by Session Save)
   const loadSlides = useCallback((saved: Slide[]) => {
-    queue.current = [];
-    sentIndex.current = 0;
     setSlides(saved);
   }, []);
 
-  return { slides, isGenerating, feedTranscript, flush, reset, loadSlides };
+  return { slides, isGenerating, failed, lastInput, generate, regenerateWithFeedback, reset, loadSlides };
 }

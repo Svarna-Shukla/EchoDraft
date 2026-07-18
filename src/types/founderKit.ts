@@ -8,6 +8,8 @@ export type FounderKit = {
   problemStatement: string;
   targetCustomer: string;
   valueProposition: string[];
+  gtmStrategy: string;
+  validationQuestions: string[];
 };
 
 // card for founder kit

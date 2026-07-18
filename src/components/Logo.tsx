@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
-import { Mic } from "lucide-react";
+import { Flame } from "lucide-react";
 
-// Fades in the EchoDraft logo with a microphone icon on page load
+// Fades in the Pitchr wordmark with a flame icon on page load
 export default function Logo() {
   return (
     <motion.div
@@ -10,9 +10,9 @@ export default function Logo() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
     >
-      <Mic className="h-5 w-5 text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
-      <h1 className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-2xl font-bold text-transparent">
-        EchoDraft
+      <Flame className="h-5 w-5 text-orange-400 drop-shadow-[0_0_8px_rgba(251,146,60,0.8)]" />
+      <h1 className="bg-gradient-to-r from-orange-400 to-purple-400 bg-clip-text text-2xl font-bold text-transparent">
+        Pitchr
       </h1>
     </motion.div>
   );
