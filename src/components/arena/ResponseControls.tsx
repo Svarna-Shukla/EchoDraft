@@ -42,18 +42,19 @@ export default function ResponseControls({ onSubmitAnswer }: Props) {
       <RecordButton recording={speech.isListening} onClick={handleToggleRecord} />
       <Transcript text={speech.transcript} isListening={speech.isListening} />
 
-      <div className="flex w-full max-w-sm items-center gap-2">
-        <input
+      <div className="flex w-full max-w-sm items-end gap-2">
+        <textarea
           value={typed}
           onChange={(e) => setTyped(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleTypedSubmit()}
+          onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), handleTypedSubmit())}
           placeholder="...or type your defense"
-          className="flex-1 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-sky-400/50"
+          rows={2}
+          className="flex-1 resize-none rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-sky-400/50"
         />
         <button
           onClick={handleTypedSubmit}
           disabled={!typed.trim()}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-400/20 text-sky-400 transition disabled:cursor-not-allowed disabled:opacity-30"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-400/20 text-sky-400 transition disabled:cursor-not-allowed disabled:opacity-30"
           aria-label="Submit answer"
         >
           <Send className="h-4 w-4" />

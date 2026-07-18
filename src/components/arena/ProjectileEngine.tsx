@@ -2,29 +2,34 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { playSwooshFX, playThudFX } from "../../utils/audioSynth";
 import TypedQuestion from "./TypedQuestion";
+import ShatterBurst from "./ShatterBurst";
 
 type Props = { question: string; roundNumber: number; totalRounds: number; onLanded: () => void };
 
-// Phase 3 of the arena: the investor's question flies in as a sharp SVG shard, then "shatters" on
-// impact into the readable question text, triggering the founder's shake and the response timer
+const SHATTER_DURATION_MS = 260;
+
+// Phase 3 of the arena: the investor's question flies in as a sharp SVG shard, then physically
+// shatters into fragments on impact before the readable question text types itself in
 export default function ProjectileEngine({ question, roundNumber, totalRounds, onLanded }: Props) {
-  const [landed, setLanded] = useState(false);
+  const [stage, setStage] = useState<"flying" | "shattering" | "landed">("flying");
   const firedOnLanded = useRef(false);
 
   // Plays the launch swoosh exactly once per new question
   useEffect(() => {
     playSwooshFX();
-    setLanded(false);
+    setStage("flying");
     firedOnLanded.current = false;
   }, [question]);
 
-  // Fires the collision side-effects exactly once: thud SFX and the shake/health callback upstream
+  // Fires the collision side-effects exactly once: thud SFX, the shake/health callback upstream, then
+  // a brief shatter burst before the typed question takes over
   const handleImpact = () => {
     if (firedOnLanded.current) return;
     firedOnLanded.current = true;
     playThudFX();
-    setLanded(true);
     onLanded();
+    setStage("shattering");
+    window.setTimeout(() => setStage("landed"), SHATTER_DURATION_MS);
   };
 
   return (
@@ -33,7 +38,7 @@ export default function ProjectileEngine({ question, roundNumber, totalRounds, o
         Question {roundNumber} of {totalRounds}
       </span>
 
-      {!landed && (
+      {stage === "flying" && (
         <motion.svg
           width="70"
           height="70"
@@ -47,7 +52,9 @@ export default function ProjectileEngine({ question, roundNumber, totalRounds, o
         </motion.svg>
       )}
 
-      {landed && (
+      {stage === "shattering" && <ShatterBurst durationMs={SHATTER_DURATION_MS} />}
+
+      {stage === "landed" && (
         <motion.div initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }}>
           <TypedQuestion text={question} />
         </motion.div>

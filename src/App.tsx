@@ -7,6 +7,7 @@ import FounderKitPage from "./components/founderkit/FounderKitPage";
 import BattleCardTab from "./components/battlecard/BattleCardTab";
 import ErrorBoundary from "./components/ErrorBoundary";
 import BattleArena from "./components/arena/BattleArena";
+import DeckForgingOverlay from "./components/arena/DeckForgingOverlay";
 import PresentationMode from "./components/presentation/PresentationMode";
 import SessionsPanel from "./components/sessions/SessionsPanel";
 import { useSpeech } from "./hooks/useSpeech";
@@ -194,6 +195,8 @@ export default function App() {
           onClear={handleClear}
         />
       )}
+
+      {generatingDeckFromArena.current && claude.isGenerating && <DeckForgingOverlay />}
 
       {showPresentation && (
         <PresentationMode slides={claude.slides} theme={themeState.theme} onClose={() => setShowPresentation(false)} />
