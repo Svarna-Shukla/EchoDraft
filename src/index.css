@@ -64,3 +64,24 @@ h4 {
   pointer-events: none;
   background: radial-gradient(ellipse at 50% 0%, transparent 40%, rgba(0, 0, 0, 0.45) 100%);
 }
+
+/* Slow forward drift for the background 3D grid, giving a sense of depth and motion without distraction */
+@keyframes grid-move {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 0 64px;
+  }
+}
+
+.bg-grid-move {
+  opacity: 0.6;
+  animation: grid-move 6s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg-grid-move {
+    animation: none;
+  }
+}

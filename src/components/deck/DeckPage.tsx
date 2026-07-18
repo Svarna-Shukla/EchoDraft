@@ -1,10 +1,7 @@
-import { lazy, Suspense, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import Headline from "../Headline";
-import Subtitle from "../Subtitle";
+import Hero from "../hero/Hero";
 import { revealOnScroll } from "../../lib/motion";
-
-const DeckScene3D = lazy(() => import("./DeckScene3D"));
 import VoiceRecorderPanel from "./VoiceRecorderPanel";
 import InstantGenerateForm from "./InstantGenerateForm";
 import DeckDivider from "./DeckDivider";
@@ -34,6 +31,7 @@ type Props = {
 // Top half: voice recorder + instant text generate. Bottom half: the horizontal slide deck + competitor radar
 export default function DeckPage(props: Props) {
   const deckRef = useRef<HTMLDivElement>(null);
+  const recorderRef = useRef<HTMLDivElement>(null);
   const hasSlides = props.slides.length > 0;
 
   // Smooth-scrolls down to the freshly generated deck once slides land
@@ -41,16 +39,24 @@ export default function DeckPage(props: Props) {
     if (hasSlides) deckRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [hasSlides]);
 
+  // "Start Pitching" scrolls to the recorder and, if not already listening, starts recording
+  const handleStartPitching = () => {
+    recorderRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (!props.isListening) props.onToggleRecord();
+  };
+
+  // "or type your idea instead" scrolls to and focuses the instant-generate textarea
+  const handleTypeInstead = () => {
+    const el = document.getElementById("idea-textarea");
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    (el as HTMLTextAreaElement | null)?.focus();
+  };
+
   return (
     <div className="flex flex-col pb-28">
-      <section className="flex flex-col items-center pt-4">
-        <Headline theme={props.theme} />
-        <Subtitle theme={props.theme} />
-        <div className="h-64 w-full max-w-md md:h-72">
-          <Suspense fallback={null}>
-            <DeckScene3D />
-          </Suspense>
-        </div>
+      <Hero theme={props.theme} onStartPitching={handleStartPitching} onTypeInstead={handleTypeInstead} />
+
+      <section ref={recorderRef} className="flex flex-col items-center pt-10">
         <VoiceRecorderPanel
           isListening={props.isListening}
           onToggleRecord={props.onToggleRecord}

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import NavBar, { type NavTab } from "./components/NavBar";
 import BottomBar from "./components/BottomBar";
+import BackgroundGrid from "./components/BackgroundGrid";
 import DeckPage from "./components/deck/DeckPage";
 import FounderKitPage from "./components/founderkit/FounderKitPage";
 import BattleCardTab from "./components/battlecard/BattleCardTab";
@@ -141,9 +142,10 @@ export default function App() {
 
   return (
     <div
-      className="relative flex h-full w-full flex-col overflow-y-auto transition-colors duration-500 md:h-screen md:overflow-hidden"
+      className="relative flex min-h-screen w-full flex-col transition-colors duration-500"
       style={{ background: isDark ? "var(--color-bg)" : "var(--color-bg-light)" }}
     >
+      <BackgroundGrid theme={themeState.theme} />
       <div className="grain-layer" />
       {isDark && <div className="vignette-layer" />}
       <NavBar activeTab={activeTab} onTabChange={handleTabChange} theme={themeState.theme} onToggleTheme={themeState.toggle} />

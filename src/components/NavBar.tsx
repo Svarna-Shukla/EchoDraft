@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { LayoutGrid, Sparkles, Swords } from "lucide-react";
 import Logo from "./Logo";
 import ThemeToggle from "./ThemeToggle";
@@ -23,12 +23,23 @@ const TABS: { id: NavTab; label: string; icon: typeof LayoutGrid }[] = [
 export default function NavBar({ activeTab, onTabChange, theme, onToggleTheme }: Props) {
   const isDark = theme === "dark";
 
+  // Very slight perspective lift as the page scrolls, so the nav feels like it rises off the page
+  const { scrollY } = useScroll();
+  const rotateX = useTransform(scrollY, [0, 160], [0, -2.5]);
+  const y = useTransform(scrollY, [0, 160], [0, -2]);
+  const shadowOpacity = useTransform(scrollY, [0, 160], [0, 0.35]);
+  const boxShadow = useTransform(shadowOpacity, (o) => `0 14px 32px -14px rgba(0,0,0,${o})`);
+
   return (
-    <div
+    <motion.div
       className="fixed inset-x-0 top-0 z-30 flex items-center justify-between gap-4 border-b px-6 py-3"
       style={{
         borderColor: isDark ? "var(--color-border)" : "var(--color-border-light)",
         background: isDark ? "var(--color-bg)" : "var(--color-bg-light)",
+        transformPerspective: 800,
+        rotateX,
+        y,
+        boxShadow,
       }}
     >
       <div className="flex items-center gap-3">
@@ -68,6 +79,6 @@ export default function NavBar({ activeTab, onTabChange, theme, onToggleTheme }:
       </div>
 
       <ThemeToggle theme={theme} onToggle={onToggleTheme} />
-    </div>
+    </motion.div>
   );
 }

@@ -25,6 +25,7 @@ export default function TiltCard({ children, className = "", style, maxTilt = 8,
       const angle = Math.atan2(py - 0.5, px - 0.5) * (180 / Math.PI) + 90;
       el.style.setProperty("--holo-angle", `${angle}deg`);
       el.style.setProperty("--holo-opacity", "0.55");
+      el.style.setProperty("--shine-x", `${px * 300 - 100}%`);
     }
   };
 
@@ -66,6 +67,14 @@ export default function TiltCard({ children, className = "", style, maxTilt = 8,
                 "conic-gradient(from var(--holo-angle,0deg), #ff6ec7, #ffd76e, #6effc6, #6ec7ff, #c76eff, #ff6ec7)",
             }}
           />
+        )}
+        {holo && (
+          <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit] opacity-[var(--holo-opacity,0)] transition-opacity duration-300">
+            <div
+              className="absolute -inset-y-1/2 w-1/3 -translate-x-1/2 rotate-12 bg-gradient-to-r from-transparent via-white/70 to-transparent transition-transform duration-150 ease-out"
+              style={{ left: "var(--shine-x, -150%)" }}
+            />
+          </div>
         )}
       </div>
     </div>

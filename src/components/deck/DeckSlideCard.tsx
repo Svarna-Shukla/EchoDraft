@@ -21,9 +21,10 @@ export default function DeckSlideCard({ slide, index, total, theme }: Props) {
   return (
     <motion.div
       className="w-[560px] shrink-0 snap-start"
-      initial={{ opacity: 0, x: 30 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ type: "spring", stiffness: 120, damping: 18, delay: index * 0.08 }}
+      style={{ transformPerspective: 1400 }}
+      initial={{ opacity: 0, rotateY: -85, x: 24 }}
+      animate={{ opacity: 1, rotateY: 0, x: 0 }}
+      transition={{ type: "spring", stiffness: 110, damping: 16, delay: index * 0.08 }}
     >
     <TiltCard
       className="aspect-video overflow-hidden rounded-2xl border p-8"

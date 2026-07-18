@@ -39,18 +39,19 @@ export default function ScorecardCard({ scorecard, onGenerateImprovedDeck }: Pro
         <CopyButton getText={copyText} />
       </div>
       <div className="mt-4 flex flex-col gap-3">
-        {LABELS.map((l) => (
+        {LABELS.map((l, i) => (
           <div key={l.key}>
             <div className="flex justify-between text-xs text-white/60">
               <span>{l.label}</span>
               <span>{scorecard.ratings[l.key]}/10</span>
             </div>
-            <div className="mt-1 h-2 rounded-full bg-white/10">
+            <div className="mt-1 h-2.5 rounded-full bg-white/10">
               <motion.div
-                className="h-2 rounded-full bg-[color:var(--color-accent)]"
-                initial={{ width: 0 }}
-                animate={{ width: `${scorecard.ratings[l.key] * 10}%` }}
-                transition={{ duration: 0.6 }}
+                className="h-2.5 origin-left rounded-full bg-[color:var(--color-accent)]"
+                style={{ width: `${scorecard.ratings[l.key] * 10}%`, transformPerspective: 300 }}
+                initial={{ scaleX: 0, rotateY: -55, z: -30, opacity: 0.3 }}
+                animate={{ scaleX: 1, rotateY: 0, z: 0, opacity: 1 }}
+                transition={{ duration: 0.7, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
               />
             </div>
           </div>

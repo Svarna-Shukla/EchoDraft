@@ -20,6 +20,7 @@ export default function InstantGenerateForm({ onGenerate, disabled, theme }: Pro
   return (
     <div className="mt-8 flex w-full max-w-xl flex-col items-center gap-3 px-6">
       <textarea
+        id="idea-textarea"
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="Or type your idea here..."
