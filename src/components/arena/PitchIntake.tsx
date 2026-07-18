@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import RecordButton from "../RecordButton";
+import HexMicButton from "./HexMicButton";
 import Transcript from "../Transcript";
 import Waveform from "../Waveform";
-import Button from "../Button";
 
 type Props = {
   isListening: boolean;
@@ -13,27 +12,28 @@ type Props = {
   onSubmitPitch: (text: string) => void;
 };
 
-// Phase 1 of the arena: capture the founder's pitch by voice or typed text before the battle begins
+// Phase 1 of the arena: "Step Into the Arena" — capture the founder's pitch by voice or typed text
+// while the mask looms above, before the interrogation begins. Rendered as the bottom-slot content
+// beneath MaskStage, which handles the mask itself.
 export default function PitchIntake({ isListening, transcript, audioLevels, onToggleRecord, onSubmitPitch }: Props) {
   const [typed, setTyped] = useState("");
   const pitchText = transcript.trim() || typed.trim();
   const canEnter = !isListening && pitchText.length > 0;
 
-  // Kicks off the battle with whichever source of pitch text is available
   const handleEnter = () => {
     if (canEnter) onSubmitPitch(pitchText);
   };
 
   return (
     <motion.div
-      className="flex w-full max-w-lg flex-col items-center gap-5 text-center"
+      className="flex w-full max-w-lg flex-col items-center gap-5 px-6 text-center"
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
     >
       <h2 className="font-display text-3xl font-bold text-white">Step Into the Arena</h2>
       <p className="text-sm text-white/50">Pitch your idea. The investor is waiting to grill you on it.</p>
 
-      <RecordButton recording={isListening} onClick={onToggleRecord} />
+      <HexMicButton recording={isListening} onClick={onToggleRecord} />
       <Waveform levels={audioLevels} active={isListening} />
       <Transcript text={transcript} isListening={isListening} />
 
@@ -42,12 +42,16 @@ export default function PitchIntake({ isListening, transcript, audioLevels, onTo
         onChange={(e) => setTyped(e.target.value)}
         placeholder="...or type your pitch instead"
         rows={3}
-        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-orange-500/50"
+        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-white/30"
       />
 
-      <Button onClick={handleEnter} disabled={!canEnter} className="w-full">
+      <button
+        onClick={handleEnter}
+        disabled={!canEnter}
+        className="w-full rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-30"
+      >
         Enter the Arena
-      </Button>
+      </button>
     </motion.div>
   );
 }

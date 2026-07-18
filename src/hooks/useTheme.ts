@@ -33,3 +33,5 @@ export function useTheme() {
 
   return { theme, toggle };
 }
+
+// so basically this file is a custom React hook called useTheme that manages the theme (dark or light) of an application. It reads the previously saved theme from localStorage, defaults to dark if none is found, and provides a toggle function to switch between themes while persisting the choice in localStorage.

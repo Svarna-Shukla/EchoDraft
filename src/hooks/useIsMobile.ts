@@ -15,3 +15,4 @@ export function useIsMobile() {
 
   return isMobile;
 }
+// this hook is used to determine if the viewport is at or below Tailwind's md breakpoint (767px), and it updates the state live on window resize or device rotation.

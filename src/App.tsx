@@ -6,6 +6,7 @@ import DeckPage from "./components/deck/DeckPage";
 import FounderKitPage from "./components/founderkit/FounderKitPage";
 import BattleCardTab from "./components/battlecard/BattleCardTab";
 import ErrorBoundary from "./components/ErrorBoundary";
+import Hero from "./components/hero/Hero";
 import BattleArena from "./components/arena/BattleArena";
 import DeckForgingOverlay from "./components/arena/DeckForgingOverlay";
 import PresentationMode from "./components/presentation/PresentationMode";
@@ -35,6 +36,7 @@ export default function App() {
   const themeState = useTheme();
 
   const [activeTab, setActiveTab] = useState<NavTab>("arena");
+  const [arenaEntered, setArenaEntered] = useState(false);
   const [showPresentation, setShowPresentation] = useState(false);
   const [showSessions, setShowSessions] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -145,7 +147,10 @@ export default function App() {
       />
 
       <div className="relative z-10 flex-1 pt-20">
-        {activeTab === "arena" && (
+        {activeTab === "arena" && !arenaEntered && (
+          <Hero onStartPitching={() => setArenaEntered(true)} onTypeInstead={() => setArenaEntered(true)} />
+        )}
+        {activeTab === "arena" && arenaEntered && (
           <ErrorBoundary fallback={ERROR_FALLBACK}>
             <BattleArena
               arena={arena}

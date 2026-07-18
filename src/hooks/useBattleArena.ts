@@ -1,23 +1,49 @@
-import { useCallback, useEffect, useState } from "react";
-import type { BattlePhase, ArenaRound } from "../types/arena";
-import { usePitcherator } from "./usePitcherator";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { MaskState } from "../components/arena/mask/ArenaMask";
+import type { ArenaRound, BattlePhase } from "../types/arena";
 import { useArenaHealth } from "./useArenaHealth";
+import { usePitcherator } from "./usePitcherator";
 
-const JUDGMENT_DISPLAY_MS = 1400;
+const JUDGMENT_DISPLAY_MS = 1600;
+const MIN_SCANNING_MS = 2000;
+const LOSING_THRESHOLD = 40;
+const STRONG_LINES = ["Decent.", "Not bad."];
+const WEAK_LINES = ["Pathetic.", "Is that all?"];
+// determines the quality of the answer given
 
 // Orchestrates the full Battle Arena experience: wraps usePitcherator's Groq-backed question/scorecard
-// generation with a presentation-facing phase machine, live health bars, and the completed Q&A rounds
-// needed later to regenerate the deck.
+// generation with a presentation-facing phase machine, live health bars, the mask's current
+// personality state, and the completed Q&A rounds needed later to regenerate the deck.
 export function useBattleArena() {
   const pitcherator = usePitcherator();
   const health = useArenaHealth();
   const [phase, setPhase] = useState<BattlePhase>("input");
   const [rounds, setRounds] = useState<ArenaRound[]>([]);
   const [pitchTranscript, setPitchTranscript] = useState("");
+  const [lastOutcome, setLastOutcome] = useState<{ outcome: "strong" | "weak"; text: string } | null>(null);
+  const scanningReady = useRef(false);
+  const attackTrigger = useRef(0);
 
-  // Once question generation succeeds, the first attack can fly
+  // Enforces a minimum 2s "Analyzing your pitch..." beat even if the Groq call resolves faster
   useEffect(() => {
-    if (pitcherator.stage === "asking" && phase === "scanning") setPhase("attack_projectile");
+    if (phase !== "scanning") return;
+    scanningReady.current = false;
+    const timer = window.setTimeout(() => {
+      scanningReady.current = true;
+      if (pitcherator.stage === "asking") {
+        attackTrigger.current += 1;
+        setPhase("attacking");
+      }
+    }, MIN_SCANNING_MS);
+    return () => window.clearTimeout(timer);
+  }, [phase, pitcherator.stage]);
+
+  // Once question generation succeeds (and the minimum scan time has passed), the first attack fires
+  useEffect(() => {
+    if (pitcherator.stage === "asking" && phase === "scanning" && scanningReady.current) {
+      attackTrigger.current += 1;
+      setPhase("attacking");
+    }
   }, [pitcherator.stage, phase]);
 
   // Once the final scorecard is ready, reveal it regardless of which phase was mid-flight
@@ -35,6 +61,7 @@ export function useBattleArena() {
     (transcript: string) => {
       if (!transcript.trim()) return;
       setRounds([]);
+      setLastOutcome(null);
       setPitchTranscript(transcript);
       health.reset();
       setPhase("scanning");
@@ -43,24 +70,26 @@ export function useBattleArena() {
     [pitcherator, health]
   );
 
-  // Called once the flying question SVG collides with the founder's side
-  const questionLanded = useCallback(() => {
-    health.damageFounder();
-    setPhase("response");
-  }, [health]);
+  // Once the question has fully typed out, the mask stops "speaking" and listens for the answer
+  const questionTypedOut = useCallback(() => setPhase("response"), []);
 
-  // Records the founder's answer, damages the investor by its estimated strength, and either
-  // advances to the next attack or leaves the arena in "judgment" until the final scorecard lands
+  // Judges the founder's answer, updates both health bars, and either advances to the next attack or
+  // leaves the arena on "judgment" display until the final scorecard lands
   const submitAnswer = useCallback(
     (text: string) => {
       const question = pitcherator.questions[pitcherator.currentQuestionIndex] ?? "";
-      setRounds((r) => [...r, { question, answer: text }]);
-      health.damageInvestor(text);
+      const outcome = health.judge(text);
+      setRounds((r) => [...r, { question, answer: text, outcome }]);
+      const lines = outcome === "strong" ? STRONG_LINES : WEAK_LINES;
+      setLastOutcome({ outcome, text: lines[Math.floor(Math.random() * lines.length)] });
       setPhase("judgment");
       const isLastRound = pitcherator.currentQuestionIndex >= pitcherator.questions.length - 1;
       pitcherator.submitAnswer(text);
       if (!isLastRound) {
-        window.setTimeout(() => setPhase("attack_projectile"), JUDGMENT_DISPLAY_MS);
+        window.setTimeout(() => {
+          attackTrigger.current += 1;
+          setPhase("attacking");
+        }, JUDGMENT_DISPLAY_MS);
       }
     },
     [pitcherator, health]
@@ -70,10 +99,22 @@ export function useBattleArena() {
   const fightAgain = useCallback(() => {
     setRounds([]);
     setPitchTranscript("");
+    setLastOutcome(null);
     health.reset();
     pitcherator.reset();
     setPhase("input");
   }, [pitcherator, health]);
+
+  const maskState: MaskState =
+    phase === "attacking"
+      ? "speaking"
+      : phase === "response"
+        ? "listening"
+        : phase === "judgment"
+          ? health.founderHealth < LOSING_THRESHOLD
+            ? "winning"
+            : (lastOutcome?.outcome ?? "idle")
+          : "idle";
 
   return {
     phase,
@@ -86,10 +127,12 @@ export function useBattleArena() {
     failed: pitcherator.failed,
     investorHealth: health.investorHealth,
     founderHealth: health.founderHealth,
-    isAttacking: phase === "attack_projectile",
-    isUnderAttack: phase === "attack_projectile",
+    isWinning: health.founderHealth < LOSING_THRESHOLD,
+    lastOutcome,
+    maskState,
+    attackTrigger: attackTrigger.current,
     submitPitch,
-    questionLanded,
+    questionTypedOut,
     submitAnswer,
     fightAgain,
   };
