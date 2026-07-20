@@ -14,7 +14,7 @@ export const PERSONALITIES: PersonalityConfig[] = [
     maskIntensity: 0.6,
     voiceLines: {
       strong: ["Noted.", "Acceptable."],
-      average: ["Hm.", "Go on."],
+      neutral: ["Hm.", "Go on."],
       weak: ["No.", "Weak."],
       timeout: ["Silence.", "Nothing."],
     },
@@ -29,7 +29,7 @@ export const PERSONALITIES: PersonalityConfig[] = [
     maskIntensity: 1.4,
     voiceLines: {
       strong: ["Finally.", "Not bad."],
-      average: ["Boring.", "Keep going."],
+      neutral: ["Boring.", "Keep going."],
       weak: ["Pathetic.", "Is that your best answer?"],
       timeout: ["Useless.", "Waste of my time."],
     },
@@ -44,7 +44,7 @@ export const PERSONALITIES: PersonalityConfig[] = [
     maskIntensity: 1.0,
     voiceLines: {
       strong: ["Interesting angle.", "Original, actually."],
-      average: ["Seen it before.", "Derivative."],
+      neutral: ["Seen it before.", "Derivative."],
       weak: ["Copycat.", "Not novel."],
       timeout: ["No comparison to make.", "Nothing here."],
     },

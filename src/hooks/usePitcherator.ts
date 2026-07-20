@@ -20,7 +20,7 @@ type RoundResult = { tier: AnswerTier; reaction: string; nextQuestion: string };
 // Maps the investor's strict 1-10 score onto the three health-affecting tiers
 function scoreToTier(score: number): AnswerTier {
   if (score >= 7) return "strong";
-  if (score >= 4) return "average";
+  if (score >= 4) return "neutral";
   return "weak";
 }
 
@@ -70,7 +70,7 @@ export function usePitcherator() {
         return null;
       }
       // A malformed or missing score (bad JSON shape, not a total fetch failure) defaults to a
-      // middling 5/average rather than failing the whole round
+      // middling 5/neutral rather than failing the whole round
       const score = typeof data.score === "number" && data.score >= 1 && data.score <= 10 ? data.score : 5;
       const tier: AnswerTier = silentTimeout ? "timeout" : scoreToTier(score);
       setCurrentQuestion(data.nextQuestion);

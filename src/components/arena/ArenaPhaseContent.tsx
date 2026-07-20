@@ -45,7 +45,7 @@ export default function ArenaPhaseContent({ arena, isListening, transcript, audi
       )}
       {arena.phase === "judgment" && (
         <JudgmentFlash
-          tier={arena.lastResult?.tier ?? "average"}
+          tier={arena.lastResult?.tier ?? "neutral"}
           reaction={arena.lastResult?.reaction ?? ""}
           isAnalyzing={!arena.lastResult}
           isLosing={arena.isLosing}

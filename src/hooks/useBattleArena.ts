@@ -16,7 +16,7 @@ const LOSING_THRESHOLD = 40;
 // Maps a judged answer tier to the mask's visual reaction state
 function tierToMaskState(tier: AnswerTier): MaskState {
   if (tier === "strong") return "strong";
-  if (tier === "average") return "average";
+  if (tier === "neutral") return "average";
   return "weak";
 }
 

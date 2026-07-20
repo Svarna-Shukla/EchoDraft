@@ -1,8 +1,31 @@
-// The 6 states the Battle Arena cycles through, from first pitch input to the final scorecard
-export type BattlePhase = "input" | "scanning" | "attack_projectile" | "response" | "judgment" | "scorecard";
+// Define all quality ratings for founder responses
+export type AnswerTier = "strong" | "neutral" | "weak" | "timeout";
 
-// One completed round of the investor grilling: the question thrown and the founder's answer to it
+// The complete set of states the Battle Arena cycles through
+export type BattlePhase =
+  | "personality-select"
+  | "input"
+  | "scanning"
+  | "attack_projectile"
+  | "attacking"
+  | "response"
+  | "judgment"
+  | "gameover"
+  | "scorecard";
+
+// One completed round of the investor interrogation: question, answer, and evaluation tier
 export type ArenaRound = {
   question: string;
   answer: string;
+  tier?: AnswerTier;
+  reaction?: string;
 };
+
+// Global health and round tracking state object for the arena session
+export interface ArenaState {
+  phase: BattlePhase;
+  roundIndex: number;
+  investorHealth: number;
+  founderHealth: number;
+  rounds: ArenaRound[];
+}

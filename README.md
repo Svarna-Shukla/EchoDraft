@@ -43,4 +43,3 @@ npm run dev
 I'm Svarna, I'm in high school in Texas and I built this for Hack Club Horizons 2026. this is probably the most complex thing I've shipped so far and I learned a lot building it.
 
 I used AI tools to help write code but I directed everything, reviewed every file, and made all the product decisions myself.
-

@@ -5,7 +5,7 @@ import Button from "../Button";
 
 type Props = { tier: AnswerTier; reaction: string; isAnalyzing: boolean; isLosing: boolean; failed: boolean; onRetry: () => void };
 
-const TIER_BORDER: Record<AnswerTier, string> = { strong: "#4ade80", average: "#facc15", weak: "#f87171", timeout: "#991b1b" };
+const TIER_BORDER: Record<AnswerTier, string> = { strong: "#4ade80", neutral: "#facc15", weak: "#f87171", timeout: "#991b1b" };
 const HOLD_MS = 3500;
 const FADE_MS = 500;
 
