@@ -1,14 +1,59 @@
 import { speakDeep } from "./voicePicker";
 
-// Tai Lung's dedicated delivery: noticeably deeper and slower than every other investor's shared
-// voice.speak() in useSpeechSynthesis (pitch 0.5/rate 0.75) for an intimidating villain tone,
-// reusing the same underlying voice-picking primitive so both stay in sync with whatever deep voice
-// the browser actually has available.
-const TAI_LUNG_PITCH = 0.55;
-const TAI_LUNG_RATE = 0.9;
+// Tai Lung's dedicated fallback delivery when ElevenLabs is unavailable: noticeably deeper and
+// slower than every other investor's shared voice.speak() in useSpeechSynthesis (pitch 0.5/rate
+// 0.75), reusing the same underlying voice-picking primitive so both stay in sync with whatever
+// deep voice the browser actually has available.
+const TAI_LUNG_FALLBACK_PITCH = 0.45;
+const TAI_LUNG_FALLBACK_RATE = 0.82;
+
+const ELEVENLABS_TTS_URL = "https://api.elevenlabs.io/v1/text-to-speech";
+
+// Keeps a handle on whatever Tai Lung line is currently playing so a new line cuts off the last
+// one instead of overlapping it, mirroring speakDeep's own cancel-before-speak behavior
+let currentAudio: HTMLAudioElement | null = null;
+
+// Requests a Tai Lung line from ElevenLabs and plays it immediately as a Blob URL. Returns false
+// (never throws) on any missing config or request failure so the caller can fall back cleanly.
+async function speakWithElevenLabs(text: string): Promise<boolean> {
+  const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY;
+  const voiceId = import.meta.env.VITE_ELEVENLABS_VOICE_ID;
+  if (!apiKey || !voiceId) return false;
+
+  try {
+    const res = await fetch(`${ELEVENLABS_TTS_URL}/${voiceId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "xi-api-key": apiKey,
+      },
+      body: JSON.stringify({
+        text,
+        model_id: "eleven_monolingual_v1",
+        voice_settings: { stability: 0.3, similarity_boost: 0.85, style: 0.6 },
+      }),
+    });
+    if (!res.ok) return false;
+
+    const buffer = await res.arrayBuffer();
+    const blob = new Blob([buffer], { type: "audio/mpeg" });
+    const url = URL.createObjectURL(blob);
+    currentAudio?.pause();
+    const audio = new Audio(url);
+    currentAudio = audio;
+    audio.onended = () => URL.revokeObjectURL(url);
+    await audio.play();
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 // Speaks a line as Tai Lung — used for both his attack questions (Phase 4, on entering the
-// "attacking" battle phase) and his judgment reactions, so every line he speaks shares one voice
-export function speakAsTaiLung(text: string): void {
-  speakDeep(text, { pitch: TAI_LUNG_PITCH, rate: TAI_LUNG_RATE });
+// "attacking" battle phase) and his judgment reactions, so every line he speaks shares one voice.
+// Prefers his cloned ElevenLabs voice; falls back to the browser's deep speechSynthesis voice if
+// the API keys aren't configured or the request fails.
+export async function speakAsTaiLung(text: string): Promise<void> {
+  const spoke = await speakWithElevenLabs(text);
+  if (!spoke) speakDeep(text, { pitch: TAI_LUNG_FALLBACK_PITCH, rate: TAI_LUNG_FALLBACK_RATE });
 }

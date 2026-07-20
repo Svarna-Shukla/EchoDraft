@@ -3,6 +3,8 @@
 // Tells TypeScript exactly what environment variables to expect so we get nice autocomplete
 interface ImportMetaEnv {
   readonly VITE_GROQ_API_KEY: string;
+  readonly VITE_ELEVENLABS_API_KEY: string;
+  readonly VITE_ELEVENLABS_VOICE_ID: string;
 }
 
 interface ImportMeta {
