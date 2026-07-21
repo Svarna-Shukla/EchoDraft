@@ -2,12 +2,14 @@ import { motion } from "framer-motion";
 import { ArrowLeft, RotateCcw, Wand2 } from "lucide-react";
 import type { Scorecard } from "../../types/pitcherator";
 import type { ArenaRound } from "../../types/arena";
+import type { BossDamageLogEntry } from "../../lib/bossMode";
 import { overallScore, combinedGrade } from "../../lib/scoring";
 import Button from "../Button";
 import GradeReveal from "./GradeReveal";
 import ScoreMatrix from "./ScoreMatrix";
 import ShareButton from "./ShareButton";
 import VoiceDeliveryCard from "./voice/VoiceDeliveryCard";
+import BossDamageReport from "./BossDamageReport";
 
 type Props = {
   scorecard: Scorecard;
@@ -17,6 +19,8 @@ type Props = {
   rounds: ArenaRound[];
   personalityName: string;
   hasReview: boolean;
+  isBossMode?: boolean;
+  bossDamageLog?: BossDamageLogEntry[];
   onBackToReview: () => void;
   onFightAgain: () => void;
   onGenerateDeck: () => void;
@@ -26,7 +30,7 @@ type Props = {
 // Final phase of the arena: the pitch is over, either by choice or by 0 health. Reveals the grade and
 // 6-metric breakdown, then offers a rematch, a shareable result card, and — for a voluntary, full
 // session only — unlocking the Deck tab with a freshly generated deck built from the transcript.
-export default function ScorecardOverlay({ scorecard, isPartial, health, questionsSurvived, rounds, personalityName, hasReview, onBackToReview, onFightAgain, onGenerateDeck, isGeneratingDeck }: Props) {
+export default function ScorecardOverlay({ scorecard, isPartial, health, questionsSurvived, rounds, personalityName, hasReview, isBossMode, bossDamageLog, onBackToReview, onFightAgain, onGenerateDeck, isGeneratingDeck }: Props) {
   const total = overallScore(scorecard.ratings);
   const grade = combinedGrade(total, health);
 
@@ -51,6 +55,7 @@ export default function ScorecardOverlay({ scorecard, isPartial, health, questio
         Questions Survived: {questionsSurvived}
       </span>
       <ScoreMatrix ratings={scorecard.ratings} />
+      {isBossMode && bossDamageLog && <BossDamageReport damageLog={bossDamageLog} />}
       <VoiceDeliveryCard rounds={rounds} />
 
       <h3 className="text-sm font-bold uppercase tracking-widest text-white/50">Improve</h3>

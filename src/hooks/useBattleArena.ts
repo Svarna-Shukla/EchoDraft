@@ -1,15 +1,17 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MaskState } from "../components/arena/mask/ArenaMask";
 import type { AnswerTier, ArenaRound, BattlePhase } from "../types/arena";
 import type { VoiceAnalytics } from "../types/voice";
 import type { PersonalityConfig, PersonalityId } from "../types/investor";
 import { getInvestorProfile, pickVoiceLine } from "../lib/investorProfiles";
-import { speakAsInvestor } from "../lib/speakAsInvestor";
+import { speakInvestorLine } from "../lib/speakAsInvestor";
 import { savePitchResult } from "../lib/pitchHistory";
 import { combinedGrade, overallScore } from "../lib/scoring";
+import { aggregateBossDamage, pickNextBossInvestor } from "../lib/bossMode";
 import { useArenaHealth } from "./useArenaHealth";
 import { usePitcherator } from "./usePitcherator";
 import { useSpeechSynthesis } from "./useSpeechSynthesis";
+import { useVoiceEngine } from "./useVoiceEngine";
 
 // Matches JudgmentFlash's 3.5s hold + 0.5s fade exactly, so the next question never starts typing
 // until the comment has fully faded out
@@ -30,8 +32,10 @@ export function useBattleArena() {
   const pitcherator = usePitcherator();
   const health = useArenaHealth();
   const voice = useSpeechSynthesis();
+  const voiceEngine = useVoiceEngine();
   const [phase, setPhase] = useState<BattlePhase>("personality-select");
   const [personality, setPersonality] = useState<PersonalityConfig | null>(null);
+  const [isBossMode, setIsBossMode] = useState(false);
   const [rounds, setRounds] = useState<ArenaRound[]>([]);
   const [roundNumber, setRoundNumber] = useState(1);
   const [pitchTranscript, setPitchTranscript] = useState("");
@@ -87,15 +91,16 @@ export function useBattleArena() {
     });
   }, [phase, isPartial, pitcherator.scorecard, personality, health.health, rounds.length, pitchTranscript]);
 
-  // Every investor speaks their attack question aloud in their own cloned ElevenLabs voice the
-  // moment it's ready to launch (Phase 4) — QuestionPanel still types it out visually in parallel.
-  // currentQuestion is already updated to the new question by the time phase flips to "attacking"
-  // (see usePitcherator's start/playRound), so this fires exactly once per attack.
+  // Every investor speaks their attack question aloud — in HD via their own cloned ElevenLabs voice,
+  // or via the browser's native speechSynthesis if Fast Voice is on — the moment it's ready to launch
+  // (Phase 4); QuestionPanel still types it out visually in parallel. currentQuestion is already
+  // updated to the new question by the time phase flips to "attacking" (see usePitcherator's
+  // start/playRound), so this fires exactly once per attack.
   useEffect(() => {
     if (phase === "attacking" && personality && voice.enabled && pitcherator.currentQuestion) {
-      speakAsInvestor(pitcherator.currentQuestion, personality.voiceId).catch(console.error);
+      speakInvestorLine(pitcherator.currentQuestion, personality.voiceId, voiceEngine.engine).catch(console.error);
     }
-  }, [phase, personality, voice.enabled, pitcherator.currentQuestion]);
+  }, [phase, personality, voice.enabled, pitcherator.currentQuestion, voiceEngine.engine]);
 
   // If the opening question fails to generate, drop back to intake so the founder can retry
   useEffect(() => {
@@ -104,7 +109,17 @@ export function useBattleArena() {
 
   // Picks the investor personality for this session and moves to pitch intake
   const selectPersonality = useCallback((id: PersonalityId) => {
+    setIsBossMode(false);
     setPersonality(getInvestorProfile(id));
+    setPhase("input");
+  }, []);
+
+  // Enters "The Ultimate Tank" (Boss Mode): all 5 investors sit on the panel together and a random
+  // one takes the floor each turn. Picks the opening speaker immediately so the mask stage/UI already
+  // has an active investor to show on the pitch-intake screen.
+  const enterBossMode = useCallback(() => {
+    setIsBossMode(true);
+    setPersonality(pickNextBossInvestor());
     setPhase("input");
   }, []);
 
@@ -120,33 +135,46 @@ export function useBattleArena() {
       setPitchTranscript(transcript);
       health.reset();
       setPhase("scanning");
-      pitcherator.start(transcript, personality);
+      pitcherator.start(transcript, personality, isBossMode);
     },
-    [pitcherator, health, personality]
+    [pitcherator, health, personality, isBossMode]
   );
 
   // Once the question has fully typed out, the mask stops "speaking" and listens for the answer
   const questionTypedOut = useCallback(() => setPhase("response"), []);
 
   // Judges the founder's answer (or a timeout), updates health/streaks, speaks the reaction, and either
-  // loops back to the next attack or ends the session on 0 health
+  // loops back to the next attack or ends the session on 0 health. In Boss Mode, a new random investor
+  // is picked to take the floor BEFORE judging — that investor both reacts to the answer just given and
+  // asks the next question, in their own tone and voice, so "who's speaking" genuinely changes turn to turn.
   const submitAnswer = useCallback(
     async (text: string, isTimeout = false, voiceAnalytics?: VoiceAnalytics) => {
       if (!personality) return;
       const question = pitcherator.currentQuestion;
       const nextRoundNumber = roundNumber + 1;
+      const activeInvestor = isBossMode ? pickNextBossInvestor(personality.id) : personality;
+      if (isBossMode) setPersonality(activeInvestor);
       setPhase("judgment");
       setLastResult(null);
-      const result = await pitcherator.playRound(text, isTimeout, personality, rounds, nextRoundNumber);
+      const healthBefore = health.health;
+      const result = await pitcherator.playRound(text, isTimeout, activeInvestor, rounds, nextRoundNumber, isBossMode);
       if (!result) return;
       const finalHealth = health.applyResult(result.tier);
-      const round: ArenaRound = { question, answer: isTimeout && !text.trim() ? "" : text, tier: result.tier, reaction: result.reaction, voiceAnalytics };
+      const round: ArenaRound = {
+        question,
+        answer: isTimeout && !text.trim() ? "" : text,
+        tier: result.tier,
+        reaction: result.reaction,
+        voiceAnalytics,
+        investorId: activeInvestor.id,
+        healthDelta: finalHealth - healthBefore,
+      };
       setRounds((r) => [...r, round]);
       setLastResult({ tier: result.tier, reaction: result.reaction });
-      // Every investor's reaction line goes through their own cloned ElevenLabs voice, matching the
-      // attack question above, so a single investor's delivery is consistent start to finish
-      const line = pickVoiceLine(personality, result.tier);
-      if (voice.enabled) speakAsInvestor(line, personality.voiceId).catch(console.error);
+      // Every investor's reaction line goes through their own cloned ElevenLabs voice (or the browser
+      // native fallback under Fast Voice), matching the attack question above
+      const line = pickVoiceLine(activeInvestor, result.tier);
+      if (voice.enabled) speakInvestorLine(line, activeInvestor.voiceId, voiceEngine.engine).catch(console.error);
       if (finalHealth <= 0) {
         setPhase("gameover");
       } else {
@@ -157,7 +185,7 @@ export function useBattleArena() {
         }, JUDGMENT_DISPLAY_MS);
       }
     },
-    [pitcherator, health, personality, rounds, roundNumber, voice]
+    [pitcherator, health, personality, isBossMode, rounds, roundNumber, voice, voiceEngine.engine]
   );
 
   // Voluntarily ends the pitch, generating the full scorecard from every round played
@@ -189,6 +217,7 @@ export function useBattleArena() {
     setPitchTranscript("");
     setLastResult(null);
     setPersonality(null);
+    setIsBossMode(false);
     setIsPartial(false);
     setReviewAcknowledged(false);
     historySaved.current = false;
@@ -196,6 +225,10 @@ export function useBattleArena() {
     pitcherator.reset();
     setPhase("personality-select");
   }, [pitcherator, health]);
+
+  // Boss Mode's post-pitch damage log: which investor on the panel hit the founder hardest, computed
+  // fresh whenever the round history changes
+  const bossDamageLog = useMemo(() => aggregateBossDamage(rounds), [rounds]);
 
   const maskState: MaskState =
     phase === "attacking"
@@ -214,6 +247,8 @@ export function useBattleArena() {
   return {
     phase,
     personality,
+    isBossMode,
+    bossDamageLog,
     rounds,
     roundNumber,
     pitchTranscript,
@@ -234,7 +269,10 @@ export function useBattleArena() {
     voiceIsSpeaking: voice.isSpeaking,
     voiceEnabled: voice.enabled,
     toggleVoice: voice.toggle,
+    voiceEngine: voiceEngine.engine,
+    toggleVoiceEngine: voiceEngine.toggle,
     selectPersonality,
+    enterBossMode,
     submitPitch,
     questionTypedOut,
     submitAnswer,

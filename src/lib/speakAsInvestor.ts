@@ -106,3 +106,14 @@ export async function speakAsInvestor(text: string, voiceId?: string): Promise<v
     speakDeep(text, { pitch: FALLBACK_PITCH, rate: FALLBACK_RATE });
   }
 }
+
+// Engine-aware variant used by the Arena header's "HD Voice / Fast Voice" toggle. "fast" never
+// touches the network — it goes straight to window.speechSynthesis so no ElevenLabs characters are
+// ever burned, which matters most in "The Ultimate Tank" where 5 investors can each speak every round.
+export async function speakInvestorLine(text: string, voiceId: string | undefined, engine: "hd" | "fast"): Promise<void> {
+  if (engine === "fast") {
+    speakDeep(text, { pitch: FALLBACK_PITCH, rate: FALLBACK_RATE });
+    return;
+  }
+  return speakAsInvestor(text, voiceId);
+}

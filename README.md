@@ -6,7 +6,9 @@ basically I got tired of watching founders (including me) spend hours trying to 
 
 ## what it does
 
-the main thing is the Battle Arena. you pitch your idea out loud and AI investors (featuring creepy 3D geometric masks, trust me it's cool) immediately start grilling you with questions across five unique personalities: Lord Vane, Chad Vance, Victoria Sterling, Dr. Quirk, and Sensei Sterling. you have a health bar. bad answers drain it. good answers recover a little bit. if your health hits zero the investor wins and your pitch is dead. it's supposed to feel stressful because real investor meetings are stressful.
+the main thing is the Battle Arena. you pitch your idea out loud and AI investors immediately start grilling you with questions across five unique personalities: Lord Vane, Chad Vance, Victoria Sterling, Dr. Quirk, and Sensei Sterling. 
+
+to make the experience completely immersive, **Pitchr features full custom AI voice integration powered by ElevenLabs**. each investor persona speaks with their own unique dynamic voice identity, and a vibe, exactly replicating a complete SHARK TANK EXPERIENCE. the voices exactly match their customized creepy 3D geometric masks (trust me it's cool). you have a health bar. bad answers drain it. good answers recover a little bit. if your health hits zero the investor wins and your pitch is dead. it's supposed to feel stressful because real investor meetings are stressful.
 
 there's also a live deck builder where you just talk about your idea and slides generate in real time while you're still speaking. I thought that was pretty cool when I got it working.
 

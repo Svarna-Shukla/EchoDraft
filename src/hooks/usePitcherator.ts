@@ -40,12 +40,13 @@ export function usePitcherator() {
   const [failed, setFailed] = useState(false);
   const [pitchTranscript, setPitchTranscript] = useState("");
 
-  // Fetches the opening question for a fresh session
-  const start = useCallback(async (transcript: string, personality: PersonalityConfig) => {
+  // Fetches the opening question for a fresh session. bossMode caps the question at 15-25 words to
+  // conserve ElevenLabs credits in "The Ultimate Tank".
+  const start = useCallback(async (transcript: string, personality: PersonalityConfig, bossMode = false) => {
     setFailed(false);
     setScorecard(null);
     setPitchTranscript(transcript);
-    const data = await fetchGroqJSON<{ question: string }>(buildOpeningPrompt(personality), transcript, 300);
+    const data = await fetchGroqJSON<{ question: string }>(buildOpeningPrompt(personality, bossMode), transcript, 300);
     if (!data?.question) {
       setFailed(true);
       return;
@@ -59,10 +60,10 @@ export function usePitcherator() {
   // is judged as a hard "timeout" tier; a timeout where the founder got a partial answer down before
   // the clock ran out is graded on its own merits like any other answer, not auto-penalized
   const playRound = useCallback(
-    async (answer: string, isTimeout: boolean, personality: PersonalityConfig, history: ArenaRound[], roundNumber: number): Promise<RoundResult | null> => {
+    async (answer: string, isTimeout: boolean, personality: PersonalityConfig, history: ArenaRound[], roundNumber: number, bossMode = false): Promise<RoundResult | null> => {
       setFailed(false);
       const silentTimeout = isTimeout && !answer.trim();
-      const prompt = buildRoundPrompt(personality, roundNumber);
+      const prompt = buildRoundPrompt(personality, roundNumber, bossMode);
       const content = buildRoundContent(pitchTranscript, history, currentQuestion, answer, silentTimeout);
       const data = await fetchGroqJSON<{ score: unknown; reaction: string; nextQuestion: string }>(prompt, content, 400);
       if (!data) {

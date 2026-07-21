@@ -5,7 +5,10 @@ import RoundCounter from "./RoundCounter";
 import StreakBadge from "./StreakBadge";
 import EndPitchButton from "./EndPitchButton";
 import SpeakerToggle from "./SpeakerToggle";
+import VoiceEngineToggle from "./VoiceEngineToggle";
+import ActiveSpeakerBadge from "./ActiveSpeakerBadge";
 import MaskStage from "./MaskStage";
+import BossMaskStage from "./BossMaskStage";
 import GameOverOverlay from "./GameOverOverlay";
 import ArenaPhaseContent from "./ArenaPhaseContent";
 
@@ -39,11 +42,24 @@ export default function BattleArena(props: Props) {
     <ArenaLayout health={isLive ? arena.health : undefined}>
       {isLive && <PitchHealthBar health={arena.health} />}
       {isLive && <RoundCounter roundNumber={arena.roundNumber} streakCount={arena.streakCount} />}
+      {isLive && arena.isBossMode && <ActiveSpeakerBadge investor={arena.personality} />}
       {isLive && <StreakBadge streakEvent={arena.streakEvent} />}
       {isLive && <EndPitchButton onClick={arena.endPitch} />}
       {isLive && <SpeakerToggle enabled={arena.voiceEnabled} onToggle={arena.toggleVoice} />}
+      {arena.phase !== "personality-select" && <VoiceEngineToggle engine={arena.voiceEngine} onToggle={arena.toggleVoiceEngine} />}
 
-      {arena.phase !== "personality-select" && arena.personality && (
+      {arena.phase !== "personality-select" && arena.personality && arena.isBossMode && (
+        <BossMaskStage
+          state={arena.maskState}
+          attackTrigger={arena.attackTrigger}
+          activeInvestorId={arena.personality.id}
+          flash={flash}
+          flashKey={arena.rounds.length}
+          compact={arena.phase === "scorecard"}
+          isSpeaking={arena.voiceIsSpeaking}
+        />
+      )}
+      {arena.phase !== "personality-select" && arena.personality && !arena.isBossMode && (
         <MaskStage
           state={arena.maskState}
           attackTrigger={arena.attackTrigger}

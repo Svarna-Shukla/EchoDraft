@@ -6,8 +6,9 @@ import type { PersonalityConfig, PersonalityId } from "../../types/investor";
 import { INVESTOR_PROFILES } from "../../lib/investorProfiles";
 import PersonalityCard from "./PersonalityCard";
 import InvestorPreviewModal from "./preview/InvestorPreviewModal";
+import BossModeBanner from "./BossModeBanner";
 
-type Props = { onSelect: (id: PersonalityId) => void };
+type Props = { onSelect: (id: PersonalityId) => void; onSelectBossMode: () => void };
 
 const ICONS: Record<PersonalityId, LucideIcon> = { tailung: Swords, mentor: Heart, mogul: Briefcase, wildcard: Shuffle, techbro: Cpu };
 
@@ -15,7 +16,7 @@ const ICONS: Record<PersonalityId, LucideIcon> = { tailung: Swords, mentor: Hear
 // them — each reshapes question tone, mask intensity, and voice feedback for the whole session.
 // Clicking a card opens a live preview (3D head, voice sample, copy) rather than committing
 // immediately; the modal's own "Start Battle" button is what actually calls onSelect.
-export default function PersonalitySelect({ onSelect }: Props) {
+export default function PersonalitySelect({ onSelect, onSelectBossMode }: Props) {
   const [previewing, setPreviewing] = useState<PersonalityConfig | null>(null);
 
   return (
@@ -24,6 +25,8 @@ export default function PersonalitySelect({ onSelect }: Props) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
     >
+      <BossModeBanner onSelect={onSelectBossMode} />
+
       <h2 className="font-display text-3xl font-bold text-white">Choose Your Investor</h2>
       <p className="text-sm text-white/50">Every investor grills differently. Pick your fight.</p>
       <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2">

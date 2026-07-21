@@ -25,7 +25,7 @@ type Props = {
 export default function ArenaPhaseContent({ arena, isListening, transcript, audioLevels, speechSupported, onToggleRecord, onGenerateDeck, isGeneratingDeck }: Props) {
   return (
     <div className="flex flex-1 flex-col items-center justify-start gap-6 pb-40 md:pb-6">
-      {arena.phase === "personality-select" && <PersonalitySelect onSelect={arena.selectPersonality} />}
+      {arena.phase === "personality-select" && <PersonalitySelect onSelect={arena.selectPersonality} onSelectBossMode={arena.enterBossMode} />}
       {arena.phase === "input" && (
         <PitchIntake
           isListening={isListening}
@@ -66,6 +66,8 @@ export default function ArenaPhaseContent({ arena, isListening, transcript, audi
           rounds={arena.rounds}
           personalityName={arena.personality?.name ?? "the investor"}
           hasReview={!!arena.answerReview}
+          isBossMode={arena.isBossMode}
+          bossDamageLog={arena.bossDamageLog}
           onBackToReview={arena.backToReview}
           onFightAgain={arena.fightAgain}
           onGenerateDeck={onGenerateDeck}

@@ -1,5 +1,6 @@
 import type { PersonalityConfig } from "../types/investor";
 import type { ArenaRound } from "../types/arena";
+import { BOSS_MODE_WORD_LIMIT_INSTRUCTION } from "./bossMode";
 
 // Which topic tier a round belongs to, based purely on how far into the endless session it is
 export type DifficultyTier = "basic" | "market" | "brutal";
@@ -19,11 +20,13 @@ export function difficultyTier(roundNumber: number): DifficultyTier {
 }
 
 // Builds the instruction half of the per-round Groq prompt: personality tone + difficulty guidance +
-// the exact JSON shape to return, asking it to judge the just-given answer and throw the next question
-export function buildRoundPrompt(personality: PersonalityConfig, roundNumber: number): string {
+// the exact JSON shape to return, asking it to judge the just-given answer and throw the next question.
+// bossMode appends the strict 15-25 word cap used by "The Ultimate Tank" to conserve ElevenLabs credits.
+export function buildRoundPrompt(personality: PersonalityConfig, roundNumber: number, bossMode = false): string {
   const tier = difficultyTier(roundNumber);
   return `You are a startup investor grilling a founder. ${personality.systemPrompt}
 ${DIFFICULTY_GUIDANCE[tier]}
+${bossMode ? `\n${BOSS_MODE_WORD_LIMIT_INSTRUCTION}\n` : ""}
 
 You will be given the founder's original pitch, the full history of questions/answers so far, and their latest answer. Reference specific things they said earlier if relevant — call out contradictions, vague language, or filler words directly. Evaluate the latest answer fairly and realistically:
 - Score 8-10: specific, addresses the question directly, backed by logic or data
@@ -67,10 +70,11 @@ export function buildSingleAnswerReviewPrompt(forceDifferent: boolean): string {
 Answer:`;
 }
 
-// The very first question of a session — no history yet, always basic difficulty
-export function buildOpeningPrompt(personality: PersonalityConfig): string {
+// The very first question of a session — no history yet, always basic difficulty. bossMode appends
+// the strict 15-25 word cap used by "The Ultimate Tank" to conserve ElevenLabs credits.
+export function buildOpeningPrompt(personality: PersonalityConfig, bossMode = false): string {
   return `You are a startup investor about to grill a founder. ${personality.systemPrompt}
 ${DIFFICULTY_GUIDANCE.basic}
-
+${bossMode ? `\n${BOSS_MODE_WORD_LIMIT_INSTRUCTION}\n` : ""}
 Return JSON only, no markdown, with this exact shape: {"question":"your opening question"}`;
 }
