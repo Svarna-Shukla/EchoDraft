@@ -5,7 +5,7 @@ interface ImportMetaEnv {
   readonly VITE_GROQ_API_KEY: string;
   readonly VITE_ELEVENLABS_API_KEY: string;
   readonly VITE_ELEVENLABS_VOICE_ID: string;
-  readonly VITE_VOICE_TAI_LUNG: string;
+  readonly VITE_VOICE_LORD_VANE: string;
   readonly VITE_VOICE_TECH_BRO: string;
   readonly VITE_VOICE_MOGUL: string;
   readonly VITE_VOICE_WILDCARD: string;

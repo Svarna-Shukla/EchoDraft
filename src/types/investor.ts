@@ -1,7 +1,7 @@
 import type { AnswerTier } from "./arena";
 
 // The 5 investor personalities the founder can choose to be grilled by
-export type PersonalityId = "tailung" | "techbro" | "mogul" | "wildcard" | "mentor";
+export type PersonalityId = "lordvane" | "techbro" | "mogul" | "wildcard" | "mentor";
 
 // The full visual identity for one investor's hand-sculpted low-poly mask: the shell/backing base
 // color, the emissive glow bleeding through the panel cracks, the eye/accent glow color, the two

@@ -14,19 +14,19 @@ function readVoiceId(viteKey: keyof ImportMetaEnv, nextKey: string): string {
 
 // The 5 investor personalities selectable before entering the arena — the single source of truth
 // for each investor's identity/copy, dedicated ElevenLabs voice, Groq prompt tone, mask reaction
-// intensity, canned spoken reactions per answer tier, and 3D preview head. Tai Lung is first,
+// intensity, canned spoken reactions per answer tier, and 3D preview head. Lord Vane is first,
 // making him the default/first card shown on the select screen.
 export const INVESTOR_PROFILES: PersonalityConfig[] = [
   {
-    id: "tailung",
-    name: "Tai Lung",
+    id: "lordvane",
+    name: "Lord Vane",
     archetype: "The Ruthless Villain",
     description: "A martial-arts-obsessed villain VC who treats every pitch like a duel he's already won.",
     greetingText: "You walk into my arena with a pitch this weak? Convince me before I tear it apart.",
     // Falls back to the legacy VITE_ELEVENLABS_VOICE_ID key so existing demo configs keep working
-    voiceId: readVoiceId("VITE_VOICE_TAI_LUNG", "NEXT_PUBLIC_VOICE_TAI_LUNG") || import.meta.env.VITE_ELEVENLABS_VOICE_ID || "",
+    voiceId: readVoiceId("VITE_VOICE_LORD_VANE", "NEXT_PUBLIC_VOICE_LORD_VANE") || import.meta.env.VITE_ELEVENLABS_VOICE_ID || "",
     systemPrompt:
-      "Write as Tai Lung: a dominant, hyper-confident, condescending villain investor who talks in martial-arts and battle metaphors. Taunt the founder — e.g. 'Our battle will be legendary!' or 'Is that all you've got?' — and end the question with a contemptuous jab at their pitch, like 'Your CAC is weak.' Never break the villain-VC persona.",
+      "Write as Lord Vane: a dominant, hyper-confident, condescending villain investor who talks in martial-arts and battle metaphors. Taunt the founder — e.g. 'Our battle will be legendary!' or 'Is that all you've got?' — and end the question with a contemptuous jab at their pitch, like 'Your CAC is weak.' Never break the villain-VC persona.",
     maskIntensity: 1.3,
     voiceLines: {
       strong: ["Impressive. You may be worthy after all.", "Finally, a real opponent."],
@@ -145,7 +145,7 @@ export const INVESTOR_PROFILES: PersonalityConfig[] = [
   },
 ];
 
-// Looks up an investor's full profile by id, falling back to Tai Lung (the default) if somehow unset
+// Looks up an investor's full profile by id, falling back to Lord Vane (the default) if somehow unset
 export function getInvestorProfile(id: PersonalityId | null): PersonalityConfig {
   return INVESTOR_PROFILES.find((p) => p.id === id) ?? INVESTOR_PROFILES[0];
 }

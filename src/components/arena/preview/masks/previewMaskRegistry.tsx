@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 import type { MaskTheme, PersonalityId } from "../../../../types/investor";
-import TaiLungPreviewMask from "./TaiLungPreviewMask";
+import LordVanePreviewMask from "./LordVanePreviewMask";
 import ChadVancePreviewMask from "./ChadVancePreviewMask";
 import VictoriaSterlingPreviewMask from "./VictoriaSterlingPreviewMask";
 import DrQuirkPreviewMask from "./DrQuirkPreviewMask";
@@ -11,7 +11,7 @@ export type PreviewMaskProps = { theme: MaskTheme };
 // Every investor's dedicated, hand-sculpted BufferGeometry mask for the pre-battle preview modal —
 // idle rotation, mouse-tilt, hover glow, all keyed by investor id. No wireframe primitive fallbacks.
 export const PREVIEW_MASKS: Record<PersonalityId, ComponentType<PreviewMaskProps>> = {
-  tailung: TaiLungPreviewMask,
+  lordvane: LordVanePreviewMask,
   techbro: ChadVancePreviewMask,
   mogul: VictoriaSterlingPreviewMask,
   wildcard: DrQuirkPreviewMask,

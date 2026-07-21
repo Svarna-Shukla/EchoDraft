@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-// Generalizes the shattered-shell technique from maskGeometry.ts (Tai Lung's original hand-sculpted
+// Generalizes the shattered-shell technique from maskGeometry.ts (Lord Vane's original hand-sculpted
 // mask) into a reusable low-poly head builder: a grid of quads split into triangles, each shrunk
 // toward its own centroid so cracks of glowing backing show through the seams, with per-vertex jitter
 // and an arbitrary sculpting profile so every investor can get a genuinely distinct silhouette.

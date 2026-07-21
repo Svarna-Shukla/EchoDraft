@@ -9,7 +9,7 @@ type Props = { investorId: PersonalityId };
 // Particle pacing per investor — most drift at the shared baseline; Dr. Quirk's read as chaotic
 // glitch dust, Arthur's and Victoria's drift noticeably slower and calmer.
 const PARTICLE_PACING: Record<PersonalityId, { speed: number; chaos: number }> = {
-  tailung: { speed: 1, chaos: 1 },
+  lordvane: { speed: 1, chaos: 1 },
   techbro: { speed: 1, chaos: 1 },
   mogul: { speed: 0.7, chaos: 0.8 },
   wildcard: { speed: 1.8, chaos: 2.4 },

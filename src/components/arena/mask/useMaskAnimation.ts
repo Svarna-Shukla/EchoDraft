@@ -15,7 +15,7 @@ type MaskRefs = {
 // color+intensity, and the mouth slit's open amount. The mouth pulses while `isTalking` — the mask is
 // asking a question ("speaking"), or the judgment line is actually playing via Web Speech Synthesis —
 // and settles back to the state's idle slit shape the instant that stops. `eyeColor` lets each
-// investor's mask glow its own signature color instead of Tai Lung's fixed orange.
+// investor's mask glow its own signature color instead of Lord Vane's fixed orange.
 export function useMaskAnimation(
   state: MaskState,
   intensity: number,

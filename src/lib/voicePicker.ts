@@ -1,6 +1,6 @@
 // Preferred deep/male voice names, checked in order, before falling back to whatever male-sounding
 // voice the browser offers by default. Shared by every investor's spoken feedback — the generic
-// useSpeechSynthesis hook and Tai Lung's dedicated deeper delivery both pick from this same list.
+// useSpeechSynthesis hook and Lord Vane's dedicated deeper delivery both pick from this same list.
 const VOICE_PRIORITY = ["Daniel", "David", "Alex", "Google UK English Male", "Microsoft David", "Arthur"];
 
 // Picks the deepest, darkest-sounding voice available: first by exact-name priority match, then any

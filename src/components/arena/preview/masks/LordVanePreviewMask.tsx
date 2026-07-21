@@ -6,10 +6,10 @@ import { useMaskIdleTiltHover } from "./useMaskIdleTiltHover";
 
 type Props = { theme: MaskTheme };
 
-// Tai Lung's preview mask: the exact hand-sculpted geometry from the original mask, ported into the
+// Lord Vane's preview mask: the exact hand-sculpted geometry from the original mask, ported into the
 // shared per-investor preview pattern (idle yaw + mouse-tilt + hover glow) so his selection-modal
 // presence matches the other four instead of sitting on a static idle pose.
-export default function TaiLungPreviewMask({ theme }: Props) {
+export default function LordVanePreviewMask({ theme }: Props) {
   const { shell, backing, eyePositions } = useMemo(() => buildMaskGeometries(), []);
   useEffect(() => () => { shell.dispose(); backing.dispose(); }, [shell, backing]);
 

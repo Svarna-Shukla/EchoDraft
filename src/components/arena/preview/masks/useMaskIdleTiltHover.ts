@@ -16,7 +16,7 @@ type GlowRefs = {
 };
 
 // Shared idle/mouse-tilt/hover driver for every investor's preview mask — extracted from the original
-// Tai Lung landing-page mask so all five get the exact same feel: a slow idle yaw, a gentle pointer
+// Lord Vane landing-page mask so all five get the exact same feel: a slow idle yaw, a gentle pointer
 // follow, and a faster spin + brighter glow whenever hovered. No OrbitControls, purely useFrame.
 export function useMaskIdleTiltHover(refs: GlowRefs) {
   const [hovered, setHovered] = useState(false);

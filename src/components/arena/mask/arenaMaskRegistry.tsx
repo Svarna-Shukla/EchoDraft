@@ -9,17 +9,17 @@ import ArthurPendeltonArenaMask from "./ArthurPendeltonArenaMask";
 
 export type ArenaMaskProps = { state: MaskState; intensity?: number; isSpeaking?: boolean; theme: MaskTheme };
 
-// Tai Lung's ArenaMask predates per-investor theming and owns its own hardcoded charcoal/orange
+// Lord Vane's ArenaMask predates per-investor theming and owns its own hardcoded charcoal/orange
 // palette, so it's adapted here to the same { state, intensity, isSpeaking, theme } shape as the
 // other four (theme is accepted but unused — his colors are baked into his geometry component).
-function TaiLungArenaMask({ state, intensity, isSpeaking }: ArenaMaskProps) {
+function LordVaneArenaMask({ state, intensity, isSpeaking }: ArenaMaskProps) {
   return <ArenaMask state={state} intensity={intensity} isSpeaking={isSpeaking} />;
 }
 
 // Every investor's dedicated, hand-sculpted BufferGeometry mask for the live battle arena — no
 // primitive wireframe fallbacks. Keyed by investor id so ArenaMaskScene can mount the right one.
 export const ARENA_MASKS: Record<PersonalityId, ComponentType<ArenaMaskProps>> = {
-  tailung: TaiLungArenaMask,
+  lordvane: LordVaneArenaMask,
   techbro: ChadVanceArenaMask,
   mogul: VictoriaSterlingArenaMask,
   wildcard: DrQuirkArenaMask,

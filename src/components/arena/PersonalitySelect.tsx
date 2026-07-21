@@ -10,7 +10,7 @@ import BossModeBanner from "./BossModeBanner";
 
 type Props = { onSelect: (id: PersonalityId) => void; onSelectBossMode: () => void };
 
-const ICONS: Record<PersonalityId, LucideIcon> = { tailung: Swords, mentor: Heart, mogul: Briefcase, wildcard: Shuffle, techbro: Cpu };
+const ICONS: Record<PersonalityId, LucideIcon> = { lordvane: Swords, mentor: Heart, mogul: Briefcase, wildcard: Shuffle, techbro: Cpu };
 
 // Phase 0 of the arena: before pitching, the founder picks which investor personality will grill
 // them — each reshapes question tone, mask intensity, and voice feedback for the whole session.

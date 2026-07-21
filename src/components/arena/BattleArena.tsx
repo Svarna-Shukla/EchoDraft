@@ -35,7 +35,7 @@ export default function BattleArena(props: Props) {
   const flash = arena.phase === "judgment" && arena.lastResult ? (arena.lastResult.tier === "strong" ? "green" : "red") : null;
 
   if (arena.phase === "gameover") {
-    return <GameOverOverlay investorId={arena.personality?.id ?? "tailung"} onTryAgain={arena.fightAgain} onViewPartial={arena.viewPartialResults} />;
+    return <GameOverOverlay investorId={arena.personality?.id ?? "lordvane"} onTryAgain={arena.fightAgain} onViewPartial={arena.viewPartialResults} />;
   }
 
   return (
