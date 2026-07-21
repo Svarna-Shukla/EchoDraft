@@ -16,7 +16,7 @@ export default function PersonalityCard({ config, icon: Icon, onSelect }: Props)
     >
       <Icon className="h-6 w-6 text-orange-400" />
       <h3 className="font-display text-base font-bold text-white sm:text-lg">{config.name}</h3>
-      <p className="text-sm font-semibold text-white/60">{config.tagline}</p>
+      <p className="text-sm font-semibold text-white/60">{config.archetype}</p>
       <p className="text-sm text-white/40">{config.description}</p>
     </motion.button>
   );

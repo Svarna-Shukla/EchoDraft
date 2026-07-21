@@ -3,8 +3,10 @@ import type { MaskState } from "../components/arena/mask/ArenaMask";
 import type { AnswerTier, ArenaRound, BattlePhase } from "../types/arena";
 import type { VoiceAnalytics } from "../types/voice";
 import type { PersonalityConfig, PersonalityId } from "../types/investor";
-import { getPersonality, pickVoiceLine } from "../lib/investorPersonalities";
-import { speakAsTaiLung } from "../lib/taiLungVoice";
+import { getInvestorProfile, pickVoiceLine } from "../lib/investorProfiles";
+import { speakAsInvestor } from "../lib/speakAsInvestor";
+import { savePitchResult } from "../lib/pitchHistory";
+import { combinedGrade, overallScore } from "../lib/scoring";
 import { useArenaHealth } from "./useArenaHealth";
 import { usePitcherator } from "./usePitcherator";
 import { useSpeechSynthesis } from "./useSpeechSynthesis";
@@ -38,6 +40,7 @@ export function useBattleArena() {
   const [reviewAcknowledged, setReviewAcknowledged] = useState(false);
   const scanningReady = useRef(false);
   const attackTrigger = useRef(0);
+  const historySaved = useRef(false);
 
   // Enforces a minimum 2s "Analyzing your pitch..." beat even if the Groq call resolves faster
   useEffect(() => {
@@ -66,14 +69,31 @@ export function useBattleArena() {
     if (pitcherator.stage === "scorecard" && phase !== "scorecard") setPhase("scorecard");
   }, [pitcherator.stage, phase]);
 
-  // Tai Lung specifically speaks his attack question aloud in his own deep villain voice the moment
-  // it's ready to launch (Phase 4) — every other personality's question stays visual-only, typed out
-  // by QuestionPanel, matching existing behavior. currentQuestion is already updated to the new
-  // question by the time phase flips to "attacking" (see usePitcherator's start/playRound), so this
-  // fires exactly once per attack.
+  // Once a full (non-partial) scorecard lands, log the completed pitch to localStorage — the
+  // hackathon-demo analytics trail an Analytics dashboard reads back via getPitchHistory(), independent
+  // of whether the founder goes on to generate a slide deck from this session
   useEffect(() => {
-    if (phase === "attacking" && personality?.id === "tailung" && voice.enabled && pitcherator.currentQuestion) {
-      speakAsTaiLung(pitcherator.currentQuestion).catch(console.error);
+    if (phase !== "scorecard" || isPartial || !pitcherator.scorecard || !personality || historySaved.current) return;
+    historySaved.current = true;
+    const score = overallScore(pitcherator.scorecard.ratings);
+    savePitchResult({
+      investorId: personality.id,
+      investorName: personality.name,
+      grade: combinedGrade(score, health.health),
+      score,
+      healthRemaining: health.health,
+      questionsSurvived: rounds.length,
+      transcript: pitchTranscript,
+    });
+  }, [phase, isPartial, pitcherator.scorecard, personality, health.health, rounds.length, pitchTranscript]);
+
+  // Every investor speaks their attack question aloud in their own cloned ElevenLabs voice the
+  // moment it's ready to launch (Phase 4) — QuestionPanel still types it out visually in parallel.
+  // currentQuestion is already updated to the new question by the time phase flips to "attacking"
+  // (see usePitcherator's start/playRound), so this fires exactly once per attack.
+  useEffect(() => {
+    if (phase === "attacking" && personality && voice.enabled && pitcherator.currentQuestion) {
+      speakAsInvestor(pitcherator.currentQuestion, personality.voiceId).catch(console.error);
     }
   }, [phase, personality, voice.enabled, pitcherator.currentQuestion]);
 
@@ -84,7 +104,7 @@ export function useBattleArena() {
 
   // Picks the investor personality for this session and moves to pitch intake
   const selectPersonality = useCallback((id: PersonalityId) => {
-    setPersonality(getPersonality(id));
+    setPersonality(getInvestorProfile(id));
     setPhase("input");
   }, []);
 
@@ -123,14 +143,10 @@ export function useBattleArena() {
       const round: ArenaRound = { question, answer: isTimeout && !text.trim() ? "" : text, tier: result.tier, reaction: result.reaction, voiceAnalytics };
       setRounds((r) => [...r, round]);
       setLastResult({ tier: result.tier, reaction: result.reaction });
-      // Tai Lung's reaction lines go through his own dedicated deeper voice instead of the shared
-      // generic one, so every line he speaks — attack question and judgment alike — is consistent
+      // Every investor's reaction line goes through their own cloned ElevenLabs voice, matching the
+      // attack question above, so a single investor's delivery is consistent start to finish
       const line = pickVoiceLine(personality, result.tier);
-      if (personality.id === "tailung") {
-        if (voice.enabled) speakAsTaiLung(line).catch(console.error);
-      } else {
-        voice.speak(line);
-      }
+      if (voice.enabled) speakAsInvestor(line, personality.voiceId).catch(console.error);
       if (finalHealth <= 0) {
         setPhase("gameover");
       } else {
@@ -175,6 +191,7 @@ export function useBattleArena() {
     setPersonality(null);
     setIsPartial(false);
     setReviewAcknowledged(false);
+    historySaved.current = false;
     health.reset();
     pitcherator.reset();
     setPhase("personality-select");

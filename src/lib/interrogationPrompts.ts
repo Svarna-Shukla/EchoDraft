@@ -22,7 +22,7 @@ export function difficultyTier(roundNumber: number): DifficultyTier {
 // the exact JSON shape to return, asking it to judge the just-given answer and throw the next question
 export function buildRoundPrompt(personality: PersonalityConfig, roundNumber: number): string {
   const tier = difficultyTier(roundNumber);
-  return `You are a startup investor grilling a founder. ${personality.promptStyle}
+  return `You are a startup investor grilling a founder. ${personality.systemPrompt}
 ${DIFFICULTY_GUIDANCE[tier]}
 
 You will be given the founder's original pitch, the full history of questions/answers so far, and their latest answer. Reference specific things they said earlier if relevant — call out contradictions, vague language, or filler words directly. Evaluate the latest answer fairly and realistically:
@@ -69,7 +69,7 @@ Answer:`;
 
 // The very first question of a session — no history yet, always basic difficulty
 export function buildOpeningPrompt(personality: PersonalityConfig): string {
-  return `You are a startup investor about to grill a founder. ${personality.promptStyle}
+  return `You are a startup investor about to grill a founder. ${personality.systemPrompt}
 ${DIFFICULTY_GUIDANCE.basic}
 
 Return JSON only, no markdown, with this exact shape: {"question":"your opening question"}`;

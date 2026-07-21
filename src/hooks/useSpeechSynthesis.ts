@@ -14,8 +14,8 @@ function readEnabled(): boolean {
 
 // Wraps the browser's Web Speech Synthesis API so the investor can speak short judgment lines aloud,
 // deep, slow, and menacing rather than the browser's default high-pitched voice. Voice picking and
-// the actual SpeechSynthesisUtterance mechanics live in lib/voicePicker.ts, shared with Tai Lung's
-// dedicated deeper delivery in lib/taiLungVoice.ts.
+// the actual SpeechSynthesisUtterance mechanics live in lib/voicePicker.ts, shared with every
+// investor's ElevenLabs fallback delivery in lib/speakAsInvestor.ts.
 export function useSpeechSynthesis() {
   const [enabled, setEnabled] = useState(readEnabled);
   const [isSpeaking, setIsSpeaking] = useState(false);
