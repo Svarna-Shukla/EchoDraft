@@ -42,6 +42,10 @@ export function useBattleArena() {
   const [lastResult, setLastResult] = useState<{ tier: AnswerTier; reaction: string } | null>(null);
   const [isPartial, setIsPartial] = useState(false);
   const [reviewAcknowledged, setReviewAcknowledged] = useState(false);
+  // True for as long as the investor's own voice (ElevenLabs audio or the browser speechSynthesis
+  // fallback) is actually playing — gates the founder's mic in ResponseControls so it never
+  // transcribes the app's own voice as an answer (see speakInvestorLine's callbacks below)
+  const [isAISpeaking, setIsAISpeaking] = useState(false);
   const scanningReady = useRef(false);
   const attackTrigger = useRef(0);
   const historySaved = useRef(false);
@@ -98,9 +102,10 @@ export function useBattleArena() {
   // start/playRound), so this fires exactly once per attack.
   useEffect(() => {
     if (phase === "attacking" && personality && voice.enabled && pitcherator.currentQuestion) {
-      speakInvestorLine(pitcherator.currentQuestion, personality.voiceId, voiceEngine.engine, personality.fallbackVoice).catch(
-        console.error
-      );
+      speakInvestorLine(pitcherator.currentQuestion, personality.voiceId, voiceEngine.engine, personality.fallbackVoice, {
+        onStart: () => setIsAISpeaking(true),
+        onEnd: () => setIsAISpeaking(false),
+      }).catch(console.error);
     }
   }, [phase, personality, voice.enabled, pitcherator.currentQuestion, voiceEngine.engine]);
 
@@ -177,7 +182,10 @@ export function useBattleArena() {
       // native fallback under Fast Voice), matching the attack question above
       const line = pickVoiceLine(activeInvestor, result.tier);
       if (voice.enabled)
-        speakInvestorLine(line, activeInvestor.voiceId, voiceEngine.engine, activeInvestor.fallbackVoice).catch(console.error);
+        speakInvestorLine(line, activeInvestor.voiceId, voiceEngine.engine, activeInvestor.fallbackVoice, {
+          onStart: () => setIsAISpeaking(true),
+          onEnd: () => setIsAISpeaking(false),
+        }).catch(console.error);
       if (finalHealth <= 0) {
         setPhase("gameover");
       } else {
@@ -270,6 +278,7 @@ export function useBattleArena() {
     maskIntensity: personality?.maskIntensity ?? 1,
     attackTrigger: attackTrigger.current,
     voiceIsSpeaking: voice.isSpeaking,
+    isAISpeaking,
     voiceEnabled: voice.enabled,
     toggleVoice: voice.toggle,
     voiceEngine: voiceEngine.engine,

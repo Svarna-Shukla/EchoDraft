@@ -41,7 +41,7 @@ export default function ArenaPhaseContent({ arena, isListening, transcript, audi
       {(arena.phase === "attacking" || arena.phase === "response") && (
         <>
           <QuestionPanel question={arena.currentQuestion} onTypedComplete={arena.questionTypedOut} />
-          <ResponseControls visible={arena.phase === "response"} onSubmitAnswer={arena.submitAnswer} />
+          <ResponseControls visible={arena.phase === "response"} isAISpeaking={arena.isAISpeaking} onSubmitAnswer={arena.submitAnswer} />
         </>
       )}
       {arena.phase === "judgment" && (

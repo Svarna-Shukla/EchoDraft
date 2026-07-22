@@ -26,7 +26,9 @@ export function useAudioLevel() {
   // Requests mic access and starts the analyser + animation loop
   const start = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      });
       const ctx = new AudioContext();
       const source = ctx.createMediaStreamSource(stream);
       const analyser = ctx.createAnalyser();

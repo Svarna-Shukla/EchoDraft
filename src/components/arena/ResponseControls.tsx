@@ -9,7 +9,11 @@ import { useVoiceResponse } from "../../hooks/useVoiceResponse";
 import { isSpeechRecognitionSupported } from "../../hooks/useSpeech";
 import type { VoiceAnalytics } from "../../types/voice";
 
-type Props = { visible: boolean; onSubmitAnswer: (text: string, isTimeout?: boolean, voiceAnalytics?: VoiceAnalytics) => void };
+type Props = {
+  visible: boolean;
+  isAISpeaking: boolean;
+  onSubmitAnswer: (text: string, isTimeout?: boolean, voiceAnalytics?: VoiceAnalytics) => void;
+};
 
 const speechSupported = isSpeechRecognitionSupported();
 
@@ -17,19 +21,21 @@ const speechSupported = isSpeechRecognitionSupported();
 // default (pulsing mic + live waveform + streaming transcript, auto-submitting on silence), with a
 // discrete toggle down to a typed fallback. Either mode auto-submits on the 60s countdown. Owns its
 // own isolated speech instance per round so it never clobbers the original pitch transcript.
-export default function ResponseControls({ visible, onSubmitAnswer }: Props) {
+export default function ResponseControls({ visible, isAISpeaking, onSubmitAnswer }: Props) {
   const [mode, setMode] = useState<"voice" | "type">(speechSupported ? "voice" : "type");
   const [typed, setTyped] = useState("");
-  const voice = useVoiceResponse((text, analytics) => onSubmitAnswer(text, false, analytics));
+  const voice = useVoiceResponse((text, analytics) => onSubmitAnswer(text, false, analytics), isAISpeaking);
 
   // Voice-first: starts listening automatically once the question is done typing out; stops if the
-  // founder switches to typed mode or the response phase ends; cancels on unmount too
+  // founder switches to typed mode, the response phase ends, or the investor's own audio is still
+  // playing — re-arms the moment that audio finishes so the mic never overlaps with AI playback
+  // (avoids the recognizer picking up the app's own voice as a feedback loop); cancels on unmount too
   useEffect(() => {
-    if (visible && mode === "voice" && speechSupported) voice.start();
+    if (visible && mode === "voice" && speechSupported && !isAISpeaking) voice.start();
     else if (voice.isListening) voice.cancel();
     return () => voice.cancel();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible, mode]);
+  }, [visible, mode, isAISpeaking]);
 
   const handleTypedSubmit = () => {
     if (!typed.trim()) return;

@@ -12,8 +12,8 @@ const SILENCE_MS = 2200;
 // transcript stops changing for SILENCE_MS, the answer is analyzed and handed to `onSilenceFinalize`
 // automatically, same as if the founder had tapped the mic to stop. The 60s response-window timeout
 // is owned by the caller (ResponseTimer), which reads out via `stopNow` instead.
-export function useVoiceResponse(onSilenceFinalize: (transcript: string, analytics: VoiceAnalytics) => void) {
-  const speech = useSpeech();
+export function useVoiceResponse(onSilenceFinalize: (transcript: string, analytics: VoiceAnalytics) => void, isAISpeaking = false) {
+  const speech = useSpeech(isAISpeaking);
   const startedAtRef = useRef<number | null>(null);
   const silenceTimerRef = useRef<number | null>(null);
 
