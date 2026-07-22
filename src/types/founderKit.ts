@@ -60,3 +60,5 @@ export const FOUNDER_KIT_OUTPUTS: { key: FounderKitOutputKey; label: string }[] 
   { key: "linkedinAnnouncement", label: "LinkedIn announcement" },
   { key: "narrationScript", label: "Pitch narration script" },
 ];
+
+// The 3 elevator pitch lengths are separate entries here even though they share one nested FounderKit field

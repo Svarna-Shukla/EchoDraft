@@ -1,30 +1,32 @@
 import { useEffect, useRef, useState } from "react";
-import NavBar, { type NavTab } from "./components/NavBar";
-import BottomBar from "./components/BottomBar";
-import BackgroundGrid from "./components/BackgroundGrid";
-import DeckPage from "./components/deck/DeckPage";
-import FounderKitPage from "./components/founderkit/FounderKitPage";
-import BattleCardTab from "./components/battlecard/BattleCardTab";
-import ErrorBoundary from "./components/ErrorBoundary";
-import Hero from "./components/hero/Hero";
 import BattleArena from "./components/arena/BattleArena";
 import DeckForgingOverlay from "./components/arena/DeckForgingOverlay";
+import BackgroundGrid from "./components/BackgroundGrid";
+import BattleCardTab from "./components/battlecard/BattleCardTab";
+import BottomBar from "./components/BottomBar";
+import DeckPage from "./components/deck/DeckPage";
+import ErrorBoundary from "./components/ErrorBoundary";
+import FounderKitPage from "./components/founderkit/FounderKitPage";
+import Hero from "./components/hero/Hero";
+import NavBar, { type NavTab } from "./components/NavBar";
 import PresentationMode from "./components/presentation/PresentationMode";
 import SessionsPanel from "./components/sessions/SessionsPanel";
-import { useSpeech } from "./hooks/useSpeech";
-import { useClaude } from "./hooks/useClaude";
 import { useAudioLevel } from "./hooks/useAudioLevel";
-import { useFounderKit } from "./hooks/useFounderKit";
-import { useCompetitorRadar } from "./hooks/useCompetitorRadar";
 import { useBattleArena } from "./hooks/useBattleArena";
+import { useClaude } from "./hooks/useClaude";
+import { useCompetitorRadar } from "./hooks/useCompetitorRadar";
+import { useFounderKit } from "./hooks/useFounderKit";
 import { useSessions } from "./hooks/useSessions";
+import { useSpeech } from "./hooks/useSpeech";
 import { useTheme } from "./hooks/useTheme";
 import { exportSlidesToPdf } from "./lib/exportPdf";
-import { buildArenaTranscript } from "./lib/text";
-import { combinedGrade, overallScore } from "./lib/scoring";
-import type { SessionRecord } from "./types/session";
 import type { SlideTheme } from "./lib/premiumSlideTheme";
+import { combinedGrade, overallScore } from "./lib/scoring";
+import { buildArenaTranscript } from "./lib/text";
+import type { SessionRecord } from "./types/session";
 
+
+// all imports are data of the founders responses
 const ERROR_FALLBACK = <p className="p-10 text-sm text-red-400">Something went wrong — try Clear and start again.</p>;
 
 // Main app — wires speech recognition, the Battle Arena, one-shot Groq deck generation, and every feature tab together
@@ -41,9 +43,8 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<NavTab>("arena");
   const [arenaEntered, setArenaEntered] = useState(false);
   const [showPresentation, setShowPresentation] = useState(false);
-  // Slides' own remixable theme (Pitchr Neon / YC Minimal / Cyberpunk) — independent of the app's
-  // own theme toggle (themeState above)
-  const [slideTheme, setSlideTheme] = useState<SlideTheme>("neon");
+  // Slides' own dark/light theme — independent of the app's own theme toggle (themeState above)
+  const [slideTheme, setSlideTheme] = useState<SlideTheme>("dark");
   const [showSessions, setShowSessions] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [kitInput, setKitInput] = useState("");
@@ -223,7 +224,7 @@ export default function App() {
             slides={claude.slides}
             theme={themeState.theme}
             slideTheme={slideTheme}
-            onSelectSlideTheme={setSlideTheme}
+            onToggleSlideTheme={() => setSlideTheme((t) => (t === "dark" ? "light" : "dark"))}
             competitors={competitorRadar.competitors}
             isCompetitorsGenerating={competitorRadar.isGenerating}
             competitorsFailed={competitorRadar.failed}
@@ -259,13 +260,7 @@ export default function App() {
           hasSlides={claude.slides.length > 0}
           exporting={exporting}
           theme={themeState.theme}
-          onPresent={() => {
-            // Requesting fullscreen must happen synchronously inside the click handler — deferring
-            // it into PresentationMode's mount effect loses the click's transient user activation
-            // in some browsers and the request silently fails
-            document.documentElement.requestFullscreen?.().catch(() => {});
-            setShowPresentation(true);
-          }}
+          onPresent={() => setShowPresentation(true)}
           onExport={handleExport}
           onSessions={() => setShowSessions(true)}
           onClear={handleClear}
@@ -274,14 +269,7 @@ export default function App() {
 
       {generatingDeckFromArena.current && claude.isGenerating && <DeckForgingOverlay />}
 
-      {showPresentation && (
-        <PresentationMode
-          slides={claude.slides}
-          slideTheme={slideTheme}
-          onSelectSlideTheme={setSlideTheme}
-          onClose={() => setShowPresentation(false)}
-        />
-      )}
+      {showPresentation && <PresentationMode slides={claude.slides} slideTheme={slideTheme} onClose={() => setShowPresentation(false)} />}
       {showSessions && (
         <SessionsPanel
           sessions={sessions.sessions}
