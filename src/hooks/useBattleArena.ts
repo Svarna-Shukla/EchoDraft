@@ -83,13 +83,13 @@ export function useBattleArena() {
     savePitchResult({
       investorId: personality.id,
       investorName: personality.name,
-      grade: combinedGrade(score, health.health),
+      grade: combinedGrade(score, health.founderHealth),
       score,
-      healthRemaining: health.health,
+      healthRemaining: health.founderHealth,
       questionsSurvived: rounds.length,
       transcript: pitchTranscript,
     });
-  }, [phase, isPartial, pitcherator.scorecard, personality, health.health, rounds.length, pitchTranscript]);
+  }, [phase, isPartial, pitcherator.scorecard, personality, health.founderHealth, rounds.length, pitchTranscript]);
 
   // Every investor speaks their attack question aloud — in HD via their own cloned ElevenLabs voice,
   // or via the browser's native speechSynthesis if Fast Voice is on — the moment it's ready to launch
@@ -156,7 +156,7 @@ export function useBattleArena() {
       if (isBossMode) setPersonality(activeInvestor);
       setPhase("judgment");
       setLastResult(null);
-      const healthBefore = health.health;
+      const healthBefore = health.founderHealth;
       const result = await pitcherator.playRound(text, isTimeout, activeInvestor, rounds, nextRoundNumber, isBossMode);
       if (!result) return;
       const finalHealth = health.applyResult(result.tier);
@@ -236,7 +236,7 @@ export function useBattleArena() {
       : phase === "response"
         ? "listening"
         : phase === "judgment"
-          ? health.health < LOSING_THRESHOLD
+          ? health.founderHealth < LOSING_THRESHOLD
             ? "winning"
             : lastResult
               ? tierToMaskState(lastResult.tier)
@@ -258,10 +258,10 @@ export function useBattleArena() {
     showAnswerReview: phase === "scorecard" && isPartial && !reviewAcknowledged,
     isPartial,
     failed: pitcherator.failed,
-    health: health.health,
+    health: health.founderHealth,
     streakEvent: health.streakEvent,
     streakCount: health.streakCount,
-    isLosing: health.health < LOSING_THRESHOLD,
+    isLosing: health.founderHealth < LOSING_THRESHOLD,
     lastResult,
     maskState,
     maskIntensity: personality?.maskIntensity ?? 1,
